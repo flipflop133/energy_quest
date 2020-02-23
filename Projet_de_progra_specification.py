@@ -93,9 +93,21 @@ def move(dict_order[move],dict_board):
     --------
     """
 
-def upgrade():
+def upgrade(dict_army):
+    """Change the values of units in the dictionnary of the army to upgrade the units
+
+    Parameters
+    ----------
+    dict_army : dictionnary of the units to upgrade(dict)
+
+    Returns
+    -------
+    dict_army : dictionnary with the army modified in result of the upgrade(dict)
+
+    Versions
+    --------
     """
-    """
+
 def energy_transfert():
     """
     """
