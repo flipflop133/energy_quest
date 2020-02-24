@@ -1,137 +1,185 @@
-"""STRUCTURES
+dict_board = {‘case_1’ : {’cruiser_1’,’tanker _1’},’case_2 ‘ : {‘hub_1’}}
+dict_army = {'player_1':{'alpha_1': {‘ship_type’ :’cruiser’, ‘HP’ :300, ‘energy’ :200, ‘distance’ :2, …}, beta_1’ : {‘ship_type’ :’tanker’, ‘HP’ :100, ‘energy’ :500, ‘, …}}}
+dict_recruit = {'player_1':{'research':{'energy_regen':0,'move_cost':2},‘cruiser’ : {‘HP’ :300, ‘energy-capacity’ :200, ‘distance’ :2, ‘cost’ :1000…} ‘tanker : {, ‘HP’ :200, ‘energy-capacity’ :600, ‘cost’ :500, …}},
+                'player_2':{'research':{'energy_regen':1,'move_cost':3},‘cruiser’ : {‘HP’ :300, ‘energy-capacity’ :200, ‘distance’ :2, ‘cost’ :1000…} ‘tanker : {, ‘HP’ :200, ‘energy-capacity’ :600, ‘cost’ :500, …}}}
+dict_ordre = {‘player_1’ : {‘recruit’ : {},’upgrade’ : {}, …}
+              ‘player_2’ : : {‘recruit’ : {},’upgrade’ : {}, …}}
 
-#Dict1(board) :
- dict_board = {'case_1' : {’croiseur_1’,’ravitailleur _1’},'case_2' : {‘hub_1’},'case_3' : {'peak_1'}}
-
-#Dict2(players units) : 
- dict_army = {'player_1':{'alpha' : {‘type’ :’croiseur’, ‘PS’ :300, ‘Energie’ :200, ‘portée’ :2, …}, 'tango' : {‘type’ :’ravitailleur’, ‘PS’ :100, ‘Energie’ :500, ‘, …}} 'player_2' :{'bravo' : {'type' : 'croisseur, 'PS' : 200}}}
-
-#Dict3(available units to recruit -> one for each player) :
- player_1_recruit = {‘croiseur’ : {‘PS’ :300, ‘capacité d’énergie’ :200, ‘portée’ :2, ‘cout’ :1000…} ‘ravitailleur : {, ‘PS’ :200, ‘capacité d’énergie’ :600, ‘cout’ :500, …}}}
- player_2_recruit = {‘croiseur’ : {‘PS’ :600, ‘capacité d’énergie’ :300, ‘portée’ :2, ‘cout’ :1000…} ‘ravitailleur : {, ‘PS’ :200, ‘capacité d’énergie’ :600, ‘cout’ :500, …}}}
-
-#Dict4(orders) :
- dict_ordre = {‘joueur_1’ : {‘recrue’ : {},’amélioration’ : {}, …}‘Joueur_2’ : : {‘recrue’ : {},’amélioration’ : {}, …}}
-
-"""
 def display_board(dict_board):
-    """Display the board at the beginning of the game
+    """
+    display the board at the beginning of the game
 
-    Parameters
+    parameters
     ----------
     dict_board: dictionnary with all the characteristic of the board (dict)
 
-    Returns
-    -------
-
-    Versions
-    -------
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
 
     """
-def game(color=True):
-    """Start the game and play it
+def game():
+    """
+    start the game and play it
 
-    Parameters
-    ----------
-    color: use color overall or not(bool)
-
-    Returns
-    -------
-
-    Versions
-    --------
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
 
     """
-
-def play_turn():
-
 def get_order():
-    """Ask the player for orders
+    """
+    ask the player for orders
 
-    Parameters
-    ----------
-
-    Returns
-    -------
+    return
+    ------
     dict_order :dictionnary with all the order
+    
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
+    """
+def create_board(board_file):
+    """
+    take a file and change it into a board
 
-    Versions
-    --------
+    parameters
+    ----------
+    board_file: file in which all the element needed for the board are(path)
+    
+    return
+    ------
+    dict_board: dictionnary with all the characteristic of the board (dict)
+
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
     """
-def create_board(fichier_source):
-    """
-    """
-    return dict_plat
     
 def attack(dict_order[attack],dict_army):
-    """Execute attack order of each player
+    """
+    execute attack order of each player and modify stats of each effected unit
 
-    Parameters
+    parameters
     ----------
     dict_order[attack]: dictionnary of attack order(dict)
     dict_army : dictionnary with the unit of the two player(dict)
     
-    Returns
-    -------
+    return
+    ------
     dict_army: dictionnary of the 2 army modified in result of the attack(dict)
 
-    Versions
-    -------
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
     """
 
-def move(dict_order[move],dict_board):
-    """Moves the units on the board
-
-    Parameters
-    ----------
+def move(dict_order[move],dict_board,dict_army):
+    """
+    execute move order of each player and modify board and stats of moving units
+    
+    prameters
+    ---------
     dict_order[move]: dictionnary of move order(dict)
-    dict_board : dictionnary with the units emplacements(dict)
-    Returns
-    -------
-    dict_board : dictionnary with the cases modified in result of the move(dict)
-    Versions
-    --------
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    dict_army : dictionnary with the unit of the two player(dict)
+    
+    return
+    ------
+    dict_board : dictionnary with all the characteristic of the board (dict)
+
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
     """
 
-def upgrade(dict_army):
-    """Change the values of units in the dictionnary of the army to upgrade the units
+def upgrade(dict_order[upgrade],dict_army,dict_recruit):
+    """
+    execute the upgrage order of each player and modify the stats of each affected unit
 
-    Parameters
+    parameters
     ----------
-    dict_army : dictionnary of the units to upgrade(dict)
+    dict_order[upgrade]: dictionnary of upgrade order(dict)
+    dict_army : dictionnary with the unit of the two player(dict)
+    dict_recruit : dictionnary with research and stat of new ship
 
-    Returns
-    -------
-    dict_army : dictionnary with the army modified in result of the upgrade(dict)
+    return
+    ------
+    dict_army : dictionnary with the unit of the two player(dict)
+    dict_recruit : dictionnary with research and stat of new ship(dict)
 
-    Versions
-    --------
-    """
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
 
-def energy_transfert():
     """
+def energy_transfert(dict_army,dict_order[energy_transfert]):
     """
-def regenerate():
-    """
-    """
-def recruit_units():
-    """
-    """
-
-def mining():
-    """Transfer energy from energy cases to player
-    """
-
-def compute_manhattan_distance():
-    """Compute the manhattan distance 
-
-    Parameters
+    execute transfert order and modify affected unit's stat
+    
+    parameters
     ----------
+    dict_army : dictionnary with the unit of the two player(dict)
+    dict_order[energy_transfert]:dictionnary of energy transfert order(dict)
+    
+    return
+    ------
+    dict_army : dictionnary with the unit of the two player(dict)
 
-    Returns
-    -------
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
+    """
+def regenerate(dict_army):
+    """
+    makes hub regenerate energy(at the end of the turn)
 
-    Versions
-    --------
+    parameters
+    ----------
+    dict_army : dictionnary with the unit of the two player(dict)
 
+    return
+    ------
+    dict_army : dictionnary with the unit of the two player(dict)
+
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
+    """
+def recruit_units(dict_recruit,dict_order[recruit],dict_army):
+    """
+    execute recruit order and add unit to the army
+
+    parameters
+    ----------
+    dict_army : dictionnary with the unit of the two player(dict)
+    dict_recruit : dictionnary with research and stat of new ship(dict)
+    dict_order[recruit]:dictionnary of upgrade order(dict)
+
+    return
+    ------
+    dict_army : dictionnary with the unit of the two player(dict)
+    
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
+    """
+def energy_mining(dict_army,dict_order[energy_mining],dict_board):
+    """
+    execute mining order and modify affected unit's stat and energy peak's stat
+    
+    parameters
+    ----------
+    dict_army : dictionnary with the unit of the two player(dict)
+    dict_order[energy_mining]:dictionnary of energy mining order(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    
+    return
+    ------
+    dict_army : dictionnary with the unit of the two player(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+
+    Version
+    −−−−−−−
+    specification : Dominik Everaert ( v.1 24/02/2020)
     """
