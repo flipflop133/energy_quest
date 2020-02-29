@@ -1,3 +1,6 @@
+# imports
+import colored
+
 def display_board(dict_board,height,width):
     """display the board at the beginning of the game
 
@@ -10,16 +13,25 @@ def display_board(dict_board,height,width):
     specification: Dominik Everaert (v.1 24/02/20)
 
     """
-    dict_board['case[3,4]']
-    for x in range(height):
-        for y in range(width):
-            if dict_board['case[%d,%d]'%(x+1,y+1)] == {''}:
-                print('.',end='')
+    # define colored colors
+    default_color = colored.fg('#000000')
+    green = colored.fg('#00ff00')
+    red = colored.fg('#ff0000')
+    blue = colored.fg('#0000ff')
+
+    # display the board
+    for x in range(width):
+        for y in range(height):      
+            if dict_board['case[%d,%d]'%(x+1,y+1)] == {'hub':'hub_1'} :
+                print(green + '⌂' + default_color,end='')
+            elif dict_board['case[%d,%d]'%(x+1,y+1)] == {'hub':'hub_2'} :
+                print(red + '⌂' + default_color,end='')
+            elif 'peak' in dict_board['case[%d,%d]'%(x+1,y+1)]:
+                print(blue + '⚐' + default_color,end='')
             else:
-                if dict_board['case[%d,%d]'%(x+1,y+1)]['ship_name'] == 'cruiser':
-                    print('O')
+                print(".",end='')
         print('')
-        
+
 def game():
     """start the game and play it
 
@@ -28,10 +40,13 @@ def game():
     specification: François Bechet (v.1 24/02/20)
 
     """
+    # call the create_board function and store its return values
     board_values = create_board("board.txt")
     dict_board = board_values[0]
     height = board_values[1]
     width = board_values[2]
+
+    # call the display_board function
     display_board(dict_board,height,width)
 
 def get_order():
@@ -67,27 +82,51 @@ def create_board(board_file):
         data = f.readlines()
 
     # create a dict and store all board file infos in it
-    dict_board={}
+    dictFile={}
     key_1=0
     for line in data :
         if ':' in line:
             idx = line.find(':')
             key_1=line[:idx]
-            dict_board[key_1]=[]
+            dictFile[key_1]=[]
         else:
-            dict_board[key_1].append(line.split())
+            dictFile[key_1].append(line.split())
 
     # get map width and height
-    sizes = dict_board['map'][0]
+    sizes = dictFile['map'][0]
     width = int(sizes[0])
     height = int(sizes[1])
 
     # create a dictionnary of the board with keys as cases
-    case = ''
-    for x in range(height):
-        for y in range(width):
-            case = 'case[%d,%d]'%(x+1,y+1)
-            dict_board[case]={''}
+    dict_board = {}
+    for x in range(width):
+        for y in range(height):
+            dict_board['case[%d,%d]'%(x+1,y+1)] = ''
+    
+    # add hubs to the board's dictionnary
+    hub_1 = dictFile['hubs'][0]
+    hub_2 = dictFile['hubs'][1]
+    key1_hub_1 = int(hub_1[0])
+    key2_hub_1 = int(hub_1[1])
+    key1_hub_2 = int(hub_2[0])
+    key2_hub_2 = int(hub_2[1])
+    dict_board['case[%d,%d]'%(key1_hub_1,key2_hub_1)] = {'hub':'hub_1'}
+    dict_board['case[%d,%d]'%(key1_hub_2,key2_hub_2)] = {'hub':"hub_2"}
+
+    print(dictFile)
+    # add peaks to the board's dictionnary
+    for i in range(len(dictFile['peaks'])):
+        peak = 'peak_'
+        peak = peak + str(i)
+        print(peak)
+        list_peak = dictFile['peaks'][i]
+        print(list_peak)
+        energy = int(list_peak[2])
+        dict_board['case[%d,%d]'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{peak:{'energy':energy}}}
+
+
+    print(dict_board)
+    # returns
     return dict_board,height,width
     
 def attack(dict_order[attack],dict_army):
