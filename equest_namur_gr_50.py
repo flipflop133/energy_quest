@@ -1,4 +1,4 @@
-def display_board(dict_board):
+def display_board(dict_board,height,width):
     """display the board at the beginning of the game
 
     parameters
@@ -19,6 +19,7 @@ def display_board(dict_board):
                 if dict_board['case[%d,%d]'%(x+1,y+1)]['ship_name'] == 'cruiser':
                     print('O')
         print('')
+        
 def game():
     """start the game and play it
 
@@ -31,7 +32,8 @@ def game():
     dict_board = board_values[0]
     height = board_values[1]
     width = board_values[2]
-    display_board(dict_board)
+    display_board(dict_board,height,width)
+
 def get_order():
     """ask the player for orders
 
@@ -43,6 +45,7 @@ def get_order():
     −−−−−−−
     specification: Dominik Everaert (v.1 24/02/20)
     """
+
 def create_board(board_file):
     """take a file and change it into a board
 
