@@ -1,10 +1,3 @@
-dict_board = {‘case_1’ : {’cruiser_1’,’tanker _1’},’case_2 ‘ : {‘hub_1’}}
-dict_army = {'player_1':{'alpha_1': {‘ship_type’ :’cruiser’, ‘HP’ :300, ‘energy’ :200, ‘distance’ :2, …}, beta_1’ : {‘ship_type’ :’tanker’, ‘HP’ :100, ‘energy’ :500, ‘, …}},'player_2' : {alpha3 : {'ship_type' : 'cruiser','HP':300}}}
-dict_recruit = {'player_1':{'research':{'energy_regen':0,'move_cost':2},‘cruiser’ : {‘HP’ :300, ‘energy-capacity’ :200, ‘distance’ :2, ‘cost’ :1000…} ‘tanker : {, ‘HP’ :200, ‘energy-capacity’ :600, ‘cost’ :500, …}},
-                'player_2':{'research':{'energy_regen':1,'move_cost':3},‘cruiser’ : {‘HP’ :300, ‘energy-capacity’ :200, ‘distance’ :2, ‘cost’ :1000…} ‘tanker : {, ‘HP’ :200, ‘energy-capacity’ :600, ‘cost’ :500, …}}}
-dict_ordre = {‘player_1’ : {‘recruit’ : {},’upgrade’ : {}, …}
-              ‘player_2’ : : {‘recruit’ : {},’upgrade’ : {}, …}}
-
 def display_board(dict_board):
     """display the board at the beginning of the game
 
@@ -17,6 +10,15 @@ def display_board(dict_board):
     specification: Dominik Everaert (v.1 24/02/20)
 
     """
+    dict_board['case[3,4]']
+    for x in range(height):
+        for y in range(width):
+            if dict_board['case[%d,%d]'%(x+1,y+1)] == {''}:
+                print('.',end='')
+            else:
+                if dict_board['case[%d,%d]'%(x+1,y+1)]['ship_name'] == 'cruiser':
+                    print('O')
+        print('')
 def game():
     """start the game and play it
 
@@ -25,6 +27,11 @@ def game():
     specification: François Bechet (v.1 24/02/20)
 
     """
+    board_values = create_board("board.txt")
+    dict_board = board_values[0]
+    height = board_values[1]
+    width = board_values[2]
+    display_board(dict_board)
 def get_order():
     """ask the player for orders
 
@@ -51,6 +58,34 @@ def create_board(board_file):
     −−−−−−−
     specification: Dominik Everaert (v.1 24/02/20)
     """
+
+    # open the board file and save it's content
+    with open (board_file,"r") as f:
+        data = f.readlines()
+
+    # create a dict and store all board file infos in it
+    dict_board={}
+    key_1=0
+    for line in data :
+        if ':' in line:
+            idx = line.find(':')
+            key_1=line[:idx]
+            dict_board[key_1]=[]
+        else:
+            dict_board[key_1].append(line.split())
+
+    # get map width and height
+    sizes = dict_board['map'][0]
+    width = int(sizes[0])
+    height = int(sizes[1])
+
+    # create a dictionnary of the board with keys as cases
+    case = ''
+    for x in range(height):
+        for y in range(width):
+            case = 'case[%d,%d]'%(x+1,y+1)
+            dict_board[case]={''}
+    return dict_board,height,width
     
 def attack(dict_order[attack],dict_army):
     """execute attack order of each player and modify stats of each effected unit
