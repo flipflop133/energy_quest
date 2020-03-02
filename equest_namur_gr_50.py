@@ -1,7 +1,7 @@
 # imports
 import colored
 
-def display_board(dict_board,height,width):
+def display_board(dict_board,height,width,player1,player2,dict_army):
     """display the board at the beginning of the game
 
     parameters
@@ -23,10 +23,12 @@ def display_board(dict_board,height,width):
     # display the board
     for x in range(width):
         for y in range(height):      
-            if dict_board['case[%d,%d]'%(x+1,y+1)] == {'hub':'hub_1'} :
-                print(green + '⌂' + default_color,end='')
-            elif dict_board['case[%d,%d]'%(x+1,y+1)] == {'hub':'hub_2'} :
-                print(red + '⌂' + default_color,end='')
+            if player1 in dict_board['case[%d,%d]'%(x+1,y+1)]:
+                if 'hub' in dict_board['case[%d,%d]'%(x+1,y+1)][player1]:
+                    print(green + '⌂' + default_color,end='')
+            elif player2 in dict_board['case[%d,%d]'%(x+1,y+1)]:
+                if 'hub' in dict_board['case[%d,%d]'%(x+1,y+1)][player2]:
+                    print(red + '⌂' + default_color,end='')
             elif 'peak' in dict_board['case[%d,%d]'%(x+1,y+1)]:
                 print(blue + '⚐' + default_color,end='')
             else:
@@ -46,22 +48,23 @@ def game(play_game):
     player1 = input("who is player1 : ")
     player2 = input("who is player2 : ")
     # call the create_board function and store its return values
-    board_values = create_board("board.txt")
+    board_values = create_board("board.txt",player1,player2)
     dict_board = board_values[0]
     height = board_values[1]
     width = board_values[2]
-
-    # call the display_board function
-    display_board(dict_board,height,width)
-
+    
     # create dictionnary of the army
     dict_army = {player1:{},player2:{}}
+
+    # call the display_board function
+    display_board(dict_board,height,width,player1,player2,dict_army)
 
     #get_order()
     # start the main game loop
     while play_game != False:
         dict_order = get_order(player1,player2)
-        recruit_units(dict_order,dict_army,player1,player2)
+        dict_army = recruit_units(dict_order,dict_army,player1,player2,dict_board)
+        display_board(dict_board,height,width,player1,player2,dict_army)
 
 def get_order(player1,player2):
     """ask the player for orders
@@ -118,7 +121,7 @@ def get_order(player1,player2):
     # return dictionnary of orders
     return dict_order
 
-def create_board(board_file):
+def create_board(board_file,player1,player2):
     """take a file and change it into a board
 
     parameters
@@ -159,8 +162,8 @@ def create_board(board_file):
     dict_board = {}
     for x in range(width):
         for y in range(height):
-            dict_board['case[%d,%d]'%(x+1,y+1)] = ''
-    
+            dict_board['case[%d,%d]'%(x+1,y+1)] = {}
+
     # add hubs to the board's dictionnary
     hub_1 = dictFile['hubs'][0]
     hub_2 = dictFile['hubs'][1]
@@ -168,8 +171,8 @@ def create_board(board_file):
     key2_hub_1 = int(hub_1[1])
     key1_hub_2 = int(hub_2[0])
     key2_hub_2 = int(hub_2[1])
-    dict_board['case[%d,%d]'%(key1_hub_1,key2_hub_1)] = {'hub':'hub_1'}
-    dict_board['case[%d,%d]'%(key1_hub_2,key2_hub_2)] = {'hub':"hub_2"}
+    dict_board['case[%d,%d]'%(key1_hub_1,key2_hub_1)] = {player1:{'hub'}}
+    dict_board['case[%d,%d]'%(key1_hub_2,key2_hub_2)] = {player2:{'hub'}}
 
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
@@ -268,7 +271,7 @@ def regenerate(dict_army):
     specification: Dominik Everaert (v.1 24/02/20)
     """
 
-def recruit_units(dict_order,dict_army,player1,player2):
+def recruit_units(dict_order,dict_army,player1,player2,dict_board):
     """execute recruit order and add unit to the army
 
     parameters
@@ -297,7 +300,15 @@ def recruit_units(dict_order,dict_army,player1,player2):
             unit = dict_order[player]['recruit'][i]
             unitList = unit.split(':')
             dict_army[player][unitList[0]] = {'ship_type':unitList[1]}
-
+    
+    # add units to dict_board from dict_army so we can display troops on the board
+    for case, value in dict_board.items():
+        current_string = value
+        if player1 in current_string :
+            dict_board[case].update(dict_army[player1])
+        elif player2 in current_string:
+            dict_board[case].update(dict_army[player2])
+            
     return dict_army
 
 def energy_mining(dict_army,dict_order,dict_board):
