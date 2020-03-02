@@ -95,7 +95,7 @@ def get_order(player1,player2):
 
     # convert list_oder to dict_order
     dict_order = {player1:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},player2:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
-    # add player1 orders to dict_order
+    # add orders of players to dict_order
     for j in range(1,3):
         if j == 1:
             player = player1
@@ -116,7 +116,6 @@ def get_order(player1,player2):
                 dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
-    print(dict_order)
     return dict_order
 
 def create_board(board_file):
@@ -176,9 +175,7 @@ def create_board(board_file):
     for i in range(len(dictFile['peaks'])):
         peak = 'peak_'
         peak = peak + str(i)
-        print(peak)
         list_peak = dictFile['peaks'][i]
-        print(list_peak)
         energy = int(list_peak[2])
         dict_board['case[%d,%d]'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{peak:{'energy':energy}}}
 
@@ -291,19 +288,16 @@ def recruit_units(dict_order,dict_army,player1,player2):
     """
 
     # extract the units from dict_order and place them into dict_army
-    # player1
-    for i in range(len(dict_order[player1]['recruit'])):
-        unit = dict_order[player1]['recruit'][i]
-        unitList = unit.split(':')
-        dict_army[player1][unitList[0]] = {'ship_type':unitList[1]}
+    for j in range(1,3):
+        if j == 1:
+            player = player1
+        else:
+            player = player2
+        for i in range(len(dict_order[player]['recruit'])):
+            unit = dict_order[player]['recruit'][i]
+            unitList = unit.split(':')
+            dict_army[player][unitList[0]] = {'ship_type':unitList[1]}
 
-    # player2
-    for i in range(len(dict_order[player2]['recruit'])):
-        unit = dict_order[player2]['recruit'][i]
-        unitList = unit.split(':')
-        dict_army[player2][unitList[0]] = {'ship_type':unitList[1]}
-
-    print(dict_army)
     return dict_army
 
 def energy_mining(dict_army,dict_order,dict_board):
