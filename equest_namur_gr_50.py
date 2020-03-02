@@ -96,30 +96,24 @@ def get_order(player1,player2):
     # convert list_oder to dict_order
     dict_order = {player1:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},player2:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
     # add player1 orders to dict_order
-    for i in range(len(list_order_player1)):
-        if '@' in list_order_player1[i]:
-            dict_order[player1]['move'].append(list_order_player1[i])
-        elif '*' in list_order_player1[i]:
-            dict_order[player1]['attack'].append(list_order_player1[i])
-        elif 'upgrade' in list_order_player1[i]:
-            dict_order[player1]['upgrade'].append(list_order_player1[i])
-        elif '>' in list_order_player1[i] or '<' in list_order_player1[i]:
-            dict_order[player1]['transfer'].append(list_order_player1[i])
+    for j in range(1,3):
+        if j == 1:
+            player = player1
+            list_order_player = list_order_player1
         else:
-            dict_order[player1]['recruit'].append(list_order_player1[i])
-    
-    # add player2 orders to dict_order
-    for i in range(len(list_order_player2)):
-        if '@' in list_order_player2[i]:
-            dict_order[player2]['move'].append(list_order_player2[i])
-        elif '*' in list_order_player2[i]:
-            dict_order[player2]['attack'].append(list_order_player2[i])
-        elif 'upgrade' in list_order_player2[i]:
-            dict_order[player2]['upgrade'].append(list_order_player2[i])
-        elif '>' in list_order_player2[i] or '<' in list_order_player2[i]:
-            dict_order[player2]['transfer'].append(list_order_player2[i])
-        else:
-            dict_order[player2]['recruit'].append(list_order_player2[i])
+            player = player2
+            list_order_player = list_order_player2
+        for i in range(len(list_order_player)):
+            if '@' in list_order_player[i]:
+                dict_order[player]['move'].append(list_order_player[i])
+            elif '*' in list_order_player[i]:
+                dict_order[player]['attack'].append(list_order_player[i])
+            elif 'upgrade' in list_order_player[i]:
+                dict_order[player]['upgrade'].append(list_order_player[i])
+            elif '>' in list_order_player[i] or '<' in list_order_player[i]:
+                dict_order[player]['transfer'].append(list_order_player[i])
+            else:
+                dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
     print(dict_order)
