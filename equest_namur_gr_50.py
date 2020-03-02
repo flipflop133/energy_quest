@@ -42,6 +42,9 @@ def game(play_game):
     implementation: François Bechet (v.1 01/03/20)
 
     """
+    # create the players
+    player1 = input("who is player1 : ")
+    player2 = input("who is player2 : ")
     # call the create_board function and store its return values
     board_values = create_board("board.txt")
     dict_board = board_values[0]
@@ -52,15 +55,15 @@ def game(play_game):
     display_board(dict_board,height,width)
 
     # create dictionnary of the army
-    dict_army = {}
+    dict_army = {player1:{},player2:{}}
 
     #get_order()
     # start the main game loop
     while play_game != False:
-        dict_order = get_order()
-        recruit_units(dict_order['recruit'],dict_army)
+        dict_order = get_order(player1,player2)
+        recruit_units(dict_order,dict_army,player1,player2)
 
-def get_order():
+def get_order(player1,player2):
     """ask the player for orders
 
     Orders must respect this syntax :
@@ -81,26 +84,45 @@ def get_order():
     """
 
     # ask the user's orders
-    orders = input('Please enter your orders : ')
+    print(player1 + ", please enter your orders : ")
+    player1_orders = input()
+    print(player2 + ", please enter your orders : ")
+    player2_orders = input()
 
     # add orders to the dict_order list
-    list_order = orders.split()
+    list_order_player1 = player1_orders.split()
+    list_order_player2 = player2_orders.split()
 
     # convert list_oder to dict_order
-    dict_order = {'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}
-    for i in range(len(list_order)):
-        if '@' in list_order[i]:
-            dict_order['move'].append(list_order[i])
-        elif '*' in list_order[i]:
-            dict_order['attack'].append(list_order[i])
-        elif 'upgrade' in list_order[i]:
-            dict_order['upgrade'].append(list_order[i])
-        elif '>' in list_order[i] or '<' in list_order[i]:
-            dict_order['transfer'].append(list_order[i])
+    dict_order = {player1:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},player2:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
+    # add player1 orders to dict_order
+    for i in range(len(list_order_player1)):
+        if '@' in list_order_player1[i]:
+            dict_order[player1]['move'].append(list_order_player1[i])
+        elif '*' in list_order_player1[i]:
+            dict_order[player1]['attack'].append(list_order_player1[i])
+        elif 'upgrade' in list_order_player1[i]:
+            dict_order[player1]['upgrade'].append(list_order_player1[i])
+        elif '>' in list_order_player1[i] or '<' in list_order_player1[i]:
+            dict_order[player1]['transfer'].append(list_order_player1[i])
         else:
-            dict_order['recruit'].append(list_order[i])
+            dict_order[player1]['recruit'].append(list_order_player1[i])
+    
+    # add player2 orders to dict_order
+    for i in range(len(list_order_player2)):
+        if '@' in list_order_player2[i]:
+            dict_order[player2]['move'].append(list_order_player2[i])
+        elif '*' in list_order_player2[i]:
+            dict_order[player2]['attack'].append(list_order_player2[i])
+        elif 'upgrade' in list_order_player2[i]:
+            dict_order[player2]['upgrade'].append(list_order_player2[i])
+        elif '>' in list_order_player2[i] or '<' in list_order_player2[i]:
+            dict_order[player2]['transfer'].append(list_order_player2[i])
+        else:
+            dict_order[player2]['recruit'].append(list_order_player2[i])
 
     # return dictionnary of orders
+    print(dict_order)
     return dict_order
 
 def create_board(board_file):
@@ -169,7 +191,7 @@ def create_board(board_file):
     # returns
     return dict_board,height,width
     
-def attack(dict_order[attack],dict_army):
+def attack(dict_order,dict_army):
     """execute attack order of each player and modify stats of each effected unit
 
     parameters
@@ -186,7 +208,7 @@ def attack(dict_order[attack],dict_army):
     specification: Dominik Everaert (v.1 24/02/20)
     """
 
-def move(dict_order[move],dict_board,dict_army):
+def move(dict_order,dict_board,dict_army):
     """execute move order of each player and modify board and stats of moving units
     
     prameters
@@ -204,7 +226,7 @@ def move(dict_order[move],dict_board,dict_army):
     specification: François Bechet (v.1 24/02/20)
     """
 
-def upgrade(dict_order[upgrade],dict_army,dict_recruit):
+def upgrade(dict_order,dict_army,dict_recruit):
     """execute the upgrage order of each player and modify the stats of each affected unit
 
     parameters
@@ -223,7 +245,7 @@ def upgrade(dict_order[upgrade],dict_army,dict_recruit):
     specification: François Bechet (v.1 24/02/20)
 
     """
-def energy_transfert(dict_army,dict_order[energy_transfert]):
+def energy_transfert(dict_army,dict_order):
     """execute transfert order and modify affected unit's stat
     
     parameters
@@ -254,8 +276,8 @@ def regenerate(dict_army):
     −−−−−−−
     specification: Dominik Everaert (v.1 24/02/20)
     """
-    
-def recruit_units(dict_order,dict_army):
+
+def recruit_units(dict_order,dict_army,player1,player2):
     """execute recruit order and add unit to the army
 
     parameters
@@ -273,13 +295,24 @@ def recruit_units(dict_order,dict_army):
     specification: Dominik Everaert (v.1 24/02/20)
     implementation: François Bechet (v.1 01/03/20)
     """
-    #dict_army = {'player_1':{'alpha_1': {‘ship_type’ :’cruiser’,
-    for i in range(len(dict_order)):
-        unit = dict_order[i]
-        unitList = unit.split(':')
-        dict_army[unitList[0]] = {'ship_type':unitList[1]}
 
-def energy_mining(dict_army,dict_order[energy_mining],dict_board):
+    # extract the units from dict_order and place them into dict_army
+    # player1
+    for i in range(len(dict_order[player1]['recruit'])):
+        unit = dict_order[player1]['recruit'][i]
+        unitList = unit.split(':')
+        dict_army[player1][unitList[0]] = {'ship_type':unitList[1]}
+
+    # player2
+    for i in range(len(dict_order[player2]['recruit'])):
+        unit = dict_order[player2]['recruit'][i]
+        unitList = unit.split(':')
+        dict_army[player2][unitList[0]] = {'ship_type':unitList[1]}
+
+    print(dict_army)
+    return dict_army
+
+def energy_mining(dict_army,dict_order,dict_board):
     """execute mining order and modify affected unit's stat and energy peak's stat
     
     parameters
@@ -329,3 +362,4 @@ def play_turn(dict_board,dict_army,dict_recruit,dict_ordre):
     -------
     specification: François Bechet (v.1 24/02/20)
     """
+game(True)
