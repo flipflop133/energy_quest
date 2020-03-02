@@ -85,7 +85,7 @@ def get_order(player1,player2):
     specification: Dominik Everaert (v.1 24/02/20)
     implementation: François Bechet (v.1 01/03/20)
     """
-
+##correction optimisation
     # ask the user's orders
     print(player1 + ", please enter your orders : ")
     player1_orders = input()
@@ -98,6 +98,7 @@ def get_order(player1,player2):
 
     # convert list_oder to dict_order
     dict_order = {player1:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},player2:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
+##j? 
     # add orders of players to dict_order
     for j in range(1,3):
         if j == 1:
@@ -173,7 +174,7 @@ def create_board(board_file,player1,player2):
     key2_hub_2 = int(hub_2[1])
     dict_board['case[%d,%d]'%(key1_hub_1,key2_hub_1)] = {player1:{'hub'}}
     dict_board['case[%d,%d]'%(key1_hub_2,key2_hub_2)] = {player2:{'hub'}}
-
+##precision
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
         peak = 'peak_'
@@ -289,7 +290,7 @@ def recruit_units(dict_order,dict_army,player1,player2,dict_board):
     specification: Dominik Everaert (v.1 24/02/20)
     implementation: François Bechet (v.1 01/03/20)
     """
-
+##manque de return
     # extract the units from dict_order and place them into dict_army
     for j in range(1,3):
         if j == 1:
