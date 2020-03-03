@@ -47,6 +47,8 @@ def game(play_game):
     # create the players
     player1 = input("who is player1 : ")
     player2 = input("who is player2 : ")
+    # create dict_recruit
+    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':300,'energy-capacity':200, 'distance':2, 'cost':1000},'tanker':{'ship_type':'tanker','hp':200, 'energy-capacity':600, 'cost':500},'research':{'ship_type':'research','energy_regen':0,'move_cost':2}},player2:{'cruiser':{'ship_type':'cruiser','hp':300,'energy-capacity':200, 'distance':2, 'cost':1000},'tanker':{'ship_type':'tanker','hp':200, 'energy-capacity':600, 'cost':500},'research':{'ship_type':'research','energy_regen':0,'move_cost':2}}}
     # call the create_board function and store its return values
     board_values = create_board("board.txt",player1,player2)
     dict_board = board_values[0]
@@ -63,7 +65,7 @@ def game(play_game):
     # start the main game loop
     while play_game != False:
         dict_order = get_order(player1,player2)
-        dict_army = recruit_units(dict_order,dict_army,player1,player2,dict_board)
+        dict_army = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
         display_board(dict_board,height,width,player1,player2,dict_army)
 
 def get_order(player1,player2):
@@ -85,7 +87,7 @@ def get_order(player1,player2):
     specification: Dominik Everaert (v.1 24/02/20)
     implementation: François Bechet (v.1 01/03/20)
     """
-##correction optimisation
+
     # ask the user's orders
     print(player1 + ", please enter your orders : ")
     player1_orders = input()
@@ -98,7 +100,6 @@ def get_order(player1,player2):
 
     # convert list_oder to dict_order
     dict_order = {player1:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},player2:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
-##j? 
     # add orders of players to dict_order
     for j in range(1,3):
         if j == 1:
@@ -174,7 +175,7 @@ def create_board(board_file,player1,player2):
     key2_hub_2 = int(hub_2[1])
     dict_board['case[%d,%d]'%(key1_hub_1,key2_hub_1)] = {player1:{'hub'}}
     dict_board['case[%d,%d]'%(key1_hub_2,key2_hub_2)] = {player2:{'hub'}}
-##precision
+
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
         peak = 'peak_'
@@ -272,7 +273,7 @@ def regenerate(dict_army):
     specification: Dominik Everaert (v.1 24/02/20)
     """
 
-def recruit_units(dict_order,dict_army,player1,player2,dict_board):
+def recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit):
     """execute recruit order and add unit to the army
 
     parameters
@@ -290,7 +291,7 @@ def recruit_units(dict_order,dict_army,player1,player2,dict_board):
     specification: Dominik Everaert (v.1 24/02/20)
     implementation: François Bechet (v.1 01/03/20)
     """
-##manque de return
+
     # extract the units from dict_order and place them into dict_army
     for j in range(1,3):
         if j == 1:
@@ -300,7 +301,10 @@ def recruit_units(dict_order,dict_army,player1,player2,dict_board):
         for i in range(len(dict_order[player]['recruit'])):
             unit = dict_order[player]['recruit'][i]
             unitList = unit.split(':')
-            dict_army[player][unitList[0]] = {'ship_type':unitList[1]}
+            if 'cruiser' in unitList: 
+                dict_army[player][unitList[0]] = dict_recruit[player]['cruiser']
+            elif 'tanker' in unitList:
+                dict_army[player][unitList[0]] = dict_recruit[player]['tanker']
     
     # add units to dict_board from dict_army so we can display troops on the board
     for case, value in dict_board.items():
@@ -310,6 +314,7 @@ def recruit_units(dict_order,dict_army,player1,player2,dict_board):
         elif player2 in current_string:
             dict_board[case].update(dict_army[player2])
             
+    print(dict_army)
     return dict_army
 
 def energy_mining(dict_army,dict_order,dict_board):
