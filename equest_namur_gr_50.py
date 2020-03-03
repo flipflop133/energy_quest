@@ -14,6 +14,7 @@ def display_board(dict_board,height,width,player1,player2,dict_army):
     implementation: François Bechet (v.1 01/03/20)
 
     """
+    print(dict_board)
     # define colored colors
     default_color = colored.fg('#000000')
     green = colored.fg('#00ff00')
@@ -26,6 +27,8 @@ def display_board(dict_board,height,width,player1,player2,dict_army):
             if player1 in dict_board['@%d-%d'%(x+1,y+1)]:
                 if 'hub' in dict_board['@%d-%d'%(x+1,y+1)][player1]:
                     print(green + '⌂' + default_color,end='')
+                elif 'cruiser' in dict_board['@%d-%d'%(x+1,y+1)][player1]:
+                    print(green + '☿' + default_color,end='')
             elif player2 in dict_board['@%d-%d'%(x+1,y+1)]:
                 if 'hub' in dict_board['@%d-%d'%(x+1,y+1)][player2]:
                     print(red + '⌂' + default_color,end='')
@@ -66,7 +69,7 @@ def game(play_game):
     while play_game != False:
         dict_order = get_order(player1,player2)
         dict_army,dict_board = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
-        move(dict_order,dict_board,dict_army,player1,player2)
+        dict_board = move(dict_order,dict_board,dict_army,player1,player2)
         display_board(dict_board,height,width,player1,player2,dict_army)
 
 def get_order(player1,player2):
@@ -230,15 +233,21 @@ def move(dict_order,dict_board,dict_army,player1,player2):
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
             moveList = move.split(':')
-        for i in dict_board:
-            if moveList != '':
-                #store the case position
-                case = moveList[1]
-                # change the position of the unit in dict_board
-                if moveList[0] in dict_board[i]:
-                    unit = (dict_board[i][moveList[0]])
-                    dict_board[case].update({player:{moveList[0]:unit}})
+            moveList.append(player)
+        
 
+    print(dict_board)
+    print(moveList)
+    for i in dict_board:
+
+        if moveList != '':
+            #store the case position
+            case = moveList[1]
+            # change the position of the unit in dict_board
+            if moveList[0] in dict_board[i]:
+                unit = (dict_board[i][moveList[0]])
+                dict_board[case].update({moveList[2]:{moveList[0]:unit}})
+    
     return dict_board
     
 def upgrade(dict_order,dict_army,dict_recruit):
