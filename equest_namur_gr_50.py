@@ -23,13 +23,13 @@ def display_board(dict_board,height,width,player1,player2,dict_army):
     # display the board
     for x in range(width):
         for y in range(height):      
-            if player1 in dict_board['case[%d,%d]'%(x+1,y+1)]:
-                if 'hub' in dict_board['case[%d,%d]'%(x+1,y+1)][player1]:
+            if player1 in dict_board['@%d-%d'%(x+1,y+1)]:
+                if 'hub' in dict_board['@%d-%d'%(x+1,y+1)][player1]:
                     print(green + '⌂' + default_color,end='')
-            elif player2 in dict_board['case[%d,%d]'%(x+1,y+1)]:
-                if 'hub' in dict_board['case[%d,%d]'%(x+1,y+1)][player2]:
+            elif player2 in dict_board['@%d-%d'%(x+1,y+1)]:
+                if 'hub' in dict_board['@%d-%d'%(x+1,y+1)][player2]:
                     print(red + '⌂' + default_color,end='')
-            elif 'peak' in dict_board['case[%d,%d]'%(x+1,y+1)]:
+            elif 'peak' in dict_board['@%d-%d'%(x+1,y+1)]:
                 print(blue + '⚐' + default_color,end='')
             else:
                 print(".",end='')
@@ -163,7 +163,7 @@ def create_board(board_file,player1,player2):
     dict_board = {}
     for x in range(width):
         for y in range(height):
-            dict_board['case[%d,%d]'%(x+1,y+1)] = {}
+            dict_board['@%d-%d'%(x+1,y+1)] = {}
 
     # add hubs to the board's dictionnary
     hub_1 = dictFile['hubs'][0]
@@ -172,8 +172,8 @@ def create_board(board_file,player1,player2):
     key2_hub_1 = int(hub_1[1])
     key1_hub_2 = int(hub_2[0])
     key2_hub_2 = int(hub_2[1])
-    dict_board['case[%d,%d]'%(key1_hub_1,key2_hub_1)] = {player1:{'hub'}}
-    dict_board['case[%d,%d]'%(key1_hub_2,key2_hub_2)] = {player2:{'hub'}}
+    dict_board['@%d-%d'%(key1_hub_1,key2_hub_1)] = {player1:{'hub'}}
+    dict_board['@%d-%d'%(key1_hub_2,key2_hub_2)] = {player2:{'hub'}}
 
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
@@ -181,7 +181,7 @@ def create_board(board_file,player1,player2):
         peak = peak + str(i)
         list_peak = dictFile['peaks'][i]
         energy = int(list_peak[2])
-        dict_board['case[%d,%d]'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{peak:{'energy':energy}}}
+        dict_board['@%d-%d'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{peak:{'energy':energy}}}
 
     # returns
     return dict_board,height,width
@@ -235,11 +235,7 @@ def move(dict_order,dict_board,dict_army,player1,player2):
     #TODO : needs to work with all numbers!
     case = ''
     if moveList != '':
-        print(moveList)
-        temp_case = moveList[1]
-        """ for i in range(len(moveList)):
-            if i 
-        case = 'case[%s,%s]'%(x,y) """
+        case = moveList[1]
     
     # change the position of the unit in dict_board
     if moveList != '':
@@ -248,6 +244,8 @@ def move(dict_order,dict_board,dict_army,player1,player2):
                 unit = (dict_board[i][moveList[0]])
                 dict_board[case].update({moveList[0]:unit})
 
+    return dict_board
+    
 def upgrade(dict_order,dict_army,dict_recruit):
     """execute the upgrage order of each player and modify the stats of each affected unit
 
