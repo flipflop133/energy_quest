@@ -65,7 +65,8 @@ def game(play_game):
     # start the main game loop
     while play_game != False:
         dict_order = get_order(player1,player2)
-        dict_army = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
+        dict_army,dict_board = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
+        move(dict_order,dict_board,dict_army,player1,player2)
         display_board(dict_board,height,width,player1,player2,dict_army)
 
 def get_order(player1,player2):
@@ -89,10 +90,8 @@ def get_order(player1,player2):
     """
 
     # ask the user's orders
-    print(player1 + ", please enter your orders : ")
-    player1_orders = input()
-    print(player2 + ", please enter your orders : ")
-    player2_orders = input()
+    player1_orders = input("%s, please enter your orders : "%player1)
+    player2_orders = input("%s, please enter your orders : "%player2)
 
     # add orders to the dict_order list
     list_order_player1 = player1_orders.split()
@@ -101,7 +100,7 @@ def get_order(player1,player2):
     # convert list_oder to dict_order
     dict_order = {player1:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},player2:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
     # add orders of players to dict_order
-    for j in range(1,3):
+    for j in range(1,3): #j is to loop through player1 and player2
         if j == 1:
             player = player1
             list_order_player = list_order_player1
@@ -204,7 +203,7 @@ def attack(dict_order,dict_army):
     specification: Dominik Everaert (v.1 24/02/20)
     """
 
-def move(dict_order,dict_board,dict_army):
+def move(dict_order,dict_board,dict_army,player1,player2):
     """execute move order of each player and modify board and stats of moving units
     
     prameters
@@ -221,6 +220,33 @@ def move(dict_order,dict_board,dict_army):
     −−−−−−−
     specification: François Bechet (v.1 24/02/20)
     """
+    print(dict_board)
+    # extract the move order from dict_order
+    moveList = ''
+    for j in range(1,3):
+        if j == 1:
+            player = player1
+        else:
+            player = player2
+        for i in range(len(dict_order[player]['move'])):
+            move = dict_order[player]['move'][i]
+            moveList = move.split(':')
+    # store case position
+    #TODO : needs to work with all numbers!
+    case = ''
+    if moveList != '':
+        print(moveList)
+        temp_case = moveList[1]
+        """ for i in range(len(moveList)):
+            if i 
+        case = 'case[%s,%s]'%(x,y) """
+    
+    # change the position of the unit in dict_board
+    if moveList != '':
+        for i in dict_board:
+            if moveList[0] in dict_board[i]:
+                unit = (dict_board[i][moveList[0]])
+                dict_board[case].update({moveList[0]:unit})
 
 def upgrade(dict_order,dict_army,dict_recruit):
     """execute the upgrage order of each player and modify the stats of each affected unit
@@ -314,8 +340,7 @@ def recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit):
         elif player2 in current_string:
             dict_board[case].update(dict_army[player2])
             
-    print(dict_army)
-    return dict_army
+    return dict_army, dict_board
 
 def energy_mining(dict_army,dict_order,dict_board):
     """execute mining order and modify affected unit's stat and energy peak's stat
