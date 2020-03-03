@@ -220,7 +220,6 @@ def move(dict_order,dict_board,dict_army,player1,player2):
     −−−−−−−
     specification: François Bechet (v.1 24/02/20)
     """
-    print(dict_board)
     # extract the move order from dict_order
     moveList = ''
     for j in range(1,3):
@@ -231,18 +230,14 @@ def move(dict_order,dict_board,dict_army,player1,player2):
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
             moveList = move.split(':')
-    # store case position
-    #TODO : needs to work with all numbers!
-    case = ''
-    if moveList != '':
-        case = moveList[1]
-    
-    # change the position of the unit in dict_board
-    if moveList != '':
         for i in dict_board:
-            if moveList[0] in dict_board[i]:
-                unit = (dict_board[i][moveList[0]])
-                dict_board[case].update({moveList[0]:unit})
+            if moveList != '':
+                #store the case position
+                case = moveList[1]
+                # change the position of the unit in dict_board
+                if moveList[0] in dict_board[i]:
+                    unit = (dict_board[i][moveList[0]])
+                    dict_board[case].update({player:{moveList[0]:unit}})
 
     return dict_board
     
