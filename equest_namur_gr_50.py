@@ -21,36 +21,48 @@ def display_board(dict_board,height,width,player1,player2,dict_army):
     blue = colored.fg('#0000ff')
 
     # display the board
+    print(' ',end='')
+    for i in range(1,height+1):
+        if i < 10:
+            print(i,end='  ')
+        else:
+            print(i,end=' ')
+    print('')
+    n=0
     for x in range(width):
+        n = 1
         for y in range(height):      
             if player1 in dict_board['@%d-%d'%(x+1,y+1)]:
                 tempDict = dict_board['@%d-%d'%(x+1,y+1)][player1]
                 if 'hub' in tempDict:
-                    print(green + '⌂' + default_color,end='')
+                    print(green + ' ⌂ ' + default_color,end='')
                 else:
                     for key in tempDict:
                         unit = tempDict[key]
                         if 'cruiser' in unit['ship_type']:
-                            print(green + '☿' + default_color,end='')
+                            print(green + ' ☿ ' + default_color,end='')
                         if 'tanker' in unit['ship_type']:
-                            print(green + '*' + default_color,end='')
+                            print(green + ' * ' + default_color,end='')
             elif player2 in dict_board['@%d-%d'%(x+1,y+1)]:
                 tempDict = dict_board['@%d-%d'%(x+1,y+1)][player2]
                 if 'hub' in tempDict:
-                    print(red + '⌂' + default_color,end='')
+                    print(red + ' ⌂ ' + default_color,end='')
                 else:
                     for key in tempDict:
                         unit = tempDict[key]
                         if 'cruiser' in unit['ship_type']:
-                            print(red + '☿' + default_color,end='')
+                            print(red + ' ☿ ' + default_color,end='')
                         if 'tanker' in unit['ship_type']:
-                            print(red + '*' + default_color,end='')
+                            print(red + ' * ' + default_color,end='')
             elif 'peak' in dict_board['@%d-%d'%(x+1,y+1)]:
-                print(blue + '⚐' + default_color,end='')
+                print(blue + ' ⚐ ' + default_color,end='')
             else:
-                print(".",end='')
-        print('')
+                print(" . ",end='')
+        n = n + x
+        print(' ' + str(n))
 
+    print('player1:' + str(dict_army[player1]))
+    print('player2:' + str(dict_army[player2]))
 def game(play_game):
     """start the game and play it
 
@@ -188,8 +200,8 @@ def create_board(board_file,player1,player2):
     key2_hub_1 = int(hub_1[1])
     key1_hub_2 = int(hub_2[0])
     key2_hub_2 = int(hub_2[1])
-    dict_board['@%d-%d'%(key1_hub_1,key2_hub_1)] = {player1:{'hub'}}
-    dict_board['@%d-%d'%(key1_hub_2,key2_hub_2)] = {player2:{'hub'}}
+    dict_board['@%d-%d'%(key1_hub_1,key2_hub_1)] = {player1:{'hub':''}}
+    dict_board['@%d-%d'%(key1_hub_2,key2_hub_2)] = {player2:{'hub':''}}
 
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
@@ -236,26 +248,33 @@ def move(dict_order,dict_board,dict_army,player1,player2):
     −−−−−−−
     specification: François Bechet (v.1 24/02/20)
     """
-    # extract the move order from dict_order
+    # extract the move order from dict_order and change the position unit in dict_board
     moveList = ''
     for j in range(1,3):
         if j == 1:
             player = player1
         else:
             player = player2
+        
+        # extract the move order
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
             moveList = move.split(':')
             moveList.append(player)
-        
-    for i in dict_board:
-        if moveList != '':
-            #store the case position
-            case = moveList[1]
-            # change the position of the unit in dict_board
-            if moveList[0] in dict_board[i]:
-                unit = (dict_board[i][moveList[0]])
-                dict_board[case].update({moveList[2]:{moveList[0]:unit}})
+
+        # move the unit position in dict_board
+        for i in dict_board:
+            if moveList != '':
+                #store the case position
+                case = moveList[1]
+                # change the position of the unit in dict_board
+                if player in dict_board[i]:
+                    tempBoard = dict_board[i][player]
+                    if moveList[0] in tempBoard:
+                        unit = (dict_board[i][player][moveList[0]])
+                        tempDict = {player:{moveList[0]:{}}}
+                        tempDict[player][moveList[0]].update(unit)
+                        dict_board[case].update(tempDict)
     
     return dict_board
     
@@ -329,27 +348,31 @@ def recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit):
     implementation: François Bechet (v.1 01/03/20)
     """
 
-    # extract the units from dict_order and place them into dict_army
+    # extract the units from dict_order and place them into dict_board and dict_army
     for j in range(1,3):
         if j == 1:
             player = player1
         else:
             player = player2
+        # extract the order from dict_order
         for i in range(len(dict_order[player]['recruit'])):
             unit = dict_order[player]['recruit'][i]
             unitList = unit.split(':')
-            if 'cruiser' in unitList: 
-                dict_army[player][unitList[0]] = dict_recruit[player]['cruiser']
-            elif 'tanker' in unitList:
-                dict_army[player][unitList[0]] = dict_recruit[player]['tanker']
-    
-    # add units to dict_board from dict_army so we can display troops on the board
-    for case, value in dict_board.items():
-        current_string = value
-        if player1 in current_string :
-            dict_board[case].update(dict_army[player1])
-        elif player2 in current_string:
-            dict_board[case].update(dict_army[player2])
+            # add the unit to dict_board
+            # {'alpha': {'ship_type': 'tanker'}}
+            for case, value in dict_board.items():
+                current_string = value
+                unitDict = {unitList[0]:{'ship_type':unitList[1]}}
+                if player in current_string:
+                    dict_board[case][player].update(unitDict)
+            # add the unit to dict_army
+            if unitList[0] not in dict_army[player]: # verify that the unit is not already in dict_army
+                if 'cruiser' in unitList: 
+                    dict_army[player][unitList[0]] = dict_recruit[player]['cruiser']
+                elif 'tanker' in unitList:
+                    dict_army[player][unitList[0]] = dict_recruit[player]['tanker']
+            else:
+                True
             
     return dict_army, dict_board
 
