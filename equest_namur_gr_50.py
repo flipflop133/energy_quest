@@ -14,7 +14,6 @@ def display_board(dict_board,height,width,player1,player2,dict_army):
     implementation: François Bechet (v.1 01/03/20)
 
     """
-    print(dict_board)
     # define colored colors
     default_color = colored.fg('#000000')
     green = colored.fg('#00ff00')
@@ -25,13 +24,27 @@ def display_board(dict_board,height,width,player1,player2,dict_army):
     for x in range(width):
         for y in range(height):      
             if player1 in dict_board['@%d-%d'%(x+1,y+1)]:
-                if 'hub' in dict_board['@%d-%d'%(x+1,y+1)][player1]:
+                tempDict = dict_board['@%d-%d'%(x+1,y+1)][player1]
+                if 'hub' in tempDict:
                     print(green + '⌂' + default_color,end='')
-                elif 'cruiser' in dict_board['@%d-%d'%(x+1,y+1)][player1]:
-                    print(green + '☿' + default_color,end='')
+                else:
+                    for key in tempDict:
+                        unit = tempDict[key]
+                        if 'cruiser' in unit['ship_type']:
+                            print(green + '☿' + default_color,end='')
+                        if 'tanker' in unit['ship_type']:
+                            print(green + '*' + default_color,end='')
             elif player2 in dict_board['@%d-%d'%(x+1,y+1)]:
-                if 'hub' in dict_board['@%d-%d'%(x+1,y+1)][player2]:
+                tempDict = dict_board['@%d-%d'%(x+1,y+1)][player2]
+                if 'hub' in tempDict:
                     print(red + '⌂' + default_color,end='')
+                else:
+                    for key in tempDict:
+                        unit = tempDict[key]
+                        if 'cruiser' in unit['ship_type']:
+                            print(red + '☿' + default_color,end='')
+                        if 'tanker' in unit['ship_type']:
+                            print(red + '*' + default_color,end='')
             elif 'peak' in dict_board['@%d-%d'%(x+1,y+1)]:
                 print(blue + '⚐' + default_color,end='')
             else:
@@ -235,11 +248,7 @@ def move(dict_order,dict_board,dict_army,player1,player2):
             moveList = move.split(':')
             moveList.append(player)
         
-
-    print(dict_board)
-    print(moveList)
     for i in dict_board:
-
         if moveList != '':
             #store the case position
             case = moveList[1]
