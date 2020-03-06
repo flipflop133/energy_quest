@@ -96,13 +96,14 @@ def game(play_game):
         dict_army,dict_board = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
         dict_board = move(dict_order,dict_board,dict_army,player1,player2)
         display_board(dict_board,height,width,player1,player2,dict_army)
+        upgrade(dict_order,dict_army,dict_recruit,player1,player2)
 
 def get_order(player1,player2):
     """ask the player for orders
 
     Orders must respect this syntax :
         RECRUIT ORDER : 'alpha:tanker bravo:cruiser'
-        UPGRADE ORDER : 'upgrade:regeneration; upgrade:storage; upgrade:range; upgrade:move'
+        UPGRADE ORDER : 'upgrade:regeneration; upgrade:storage; upgrade:shooting_range; upgrade:move_cost'
         MOVE ORDER(name:@r-c where r is row and c is column) : 'alpha:@30-31'
         ATTACK ORDER(nom:*r-c=q where r,c is position of target and q are damages) : 'charlie:*10-15=23' 
         TRANSFER ORDER(nom:<r-c where the tanker take energy in the targeted hub; name1:>name2 where name1(tanker) gives energy to name2(cruiser or hub)) : alpha:<30-31 bravo:>charlie delta:>hub
@@ -193,6 +194,7 @@ def create_board(board_file,player1,player2):
         for y in range(height):
             dict_board['@%d-%d'%(x+1,y+1)] = {}
 
+    print(dictFile)
     # add hubs to the board's dictionnary
     hub_1 = dictFile['hubs'][0]
     hub_2 = dictFile['hubs'][1]
@@ -203,6 +205,8 @@ def create_board(board_file,player1,player2):
     dict_board['@%d-%d'%(key1_hub_1,key2_hub_1)] = {player1:{'hub':''}}
     dict_board['@%d-%d'%(key1_hub_2,key2_hub_2)] = {player2:{'hub':''}}
 
+    # create dict_army
+    dic
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
         peak = 'peak_'
@@ -214,7 +218,7 @@ def create_board(board_file,player1,player2):
     # returns
     return dict_board,height,width
     
-def attack(dict_order,dict_army):
+def attack(dict_order,dict_army,player1,player2):
     """execute attack order of each player and modify stats of each effected unit
 
     parameters
@@ -278,7 +282,7 @@ def move(dict_order,dict_board,dict_army,player1,player2):
     
     return dict_board
     
-def upgrade(dict_order,dict_army,dict_recruit):
+def upgrade(dict_order,dict_army,dict_recruit,player1,player2):
     """execute the upgrage order of each player and modify the stats of each affected unit
 
     parameters
@@ -305,52 +309,55 @@ def upgrade(dict_order,dict_army,dict_recruit):
         else:
             player = player2
         
-        # extract the upgrade order order
+        # extract the upgrade order
         for i in range(len(dict_order[player]['upgrade'])):
             upgrade = dict_order[player]['upgrade'][i]
             upgradeList = upgrade.split(':')
             upgradeList.append(player)
+            print(upgradeList)
 
-            if upgradeList[1] == regeneration:
+            # choose which upgrade must be done
+            if upgradeList[1] == 'regeneration':
                 if dict_army[player][hub][1]>=750 and dict_recruit[player][research][energy_regen] < 10 :
                      dict_army[player][hub][4]+=5
                      dict_recruit[player][research][energy_regen]+=1
 
                 else:
-                print('you can\'t upgrade energy regenaretion')
+                    print("you can't upgrade energy regenaretion")
                 
-            elif upgradeList[1] == storage:
-                 if dict_army[player][hub][1]>=600 and dict_recruit[player][research][energy_capacity] < 12 :
+            elif upgradeList[1] == 'storage':
+                print(dict_army)
+                if dict_army[player][hub][1]>=600 and dict_recruit[player][research][energy_capacity] < 12 :
                     dict_recruit[player][research][energy_capacity]+=1
                     dict_recruit[player][tanker][energy_capacity]+=100
-                    for i in range range(len(dict_army[player])):
+                    for i in range(len(dict_army[player])):
                         if dict_army[player][i][ship_type] == 'tanker' :
                             dict_army[player][i][energy_capacity]+=100
 
                 else:
-                print('you can\'t  upgrade energy capacity')
+                    print('you can\'t  upgrade energy capacity')
                 
             elif upgradeList[1] == range:
-                 if dict_army[player][hub][1]>=400 and dict_recruit[player][research][shooting_range] < 5 :
-                     dict_recruit[player][research][shooting_range]+=1
-                     dict_recruit[player][cruiser][shooting_range]+=1
-                    for i in range range(len(dict_army[player])):
+                if dict_army[player][hub][1]>=400 and dict_recruit[player][research][shooting_range] < 5 :
+                    dict_recruit[player][research][shooting_range]+=1
+                    dict_recruit[player][cruiser][shooting_range]+=1
+                    for i in range(len(dict_army[player])):
                         if dict_army[player][i][ship_type] == 'cruiser' :
                             dict_army[player][i][shooting_range]+=1
 
                 else:
-                print('you can\'t  upgrade shooting range')
+                    print('you can\'t  upgrade shooting range')
 
             elif upgradeList[1] == move:
-                 if dict_army[player][hub][1]>=500 and dict_recruit[player][research][move_cost] < 5 :
-                     dict_recruit[player][research][move_cost]+=1
-                     dict_recruit[player][cruiser][move_cost]-=1
-                    for i in range range(len(dict_army[player])):
+                if dict_army[player][hub][1]>=500 and dict_recruit[player][research][move_cost] < 5 :
+                    dict_recruit[player][research][move_cost]+=1
+                    dict_recruit[player][cruiser][move_cost]-=1
+                    for i in range(len(dict_army[player])):
                         if dict_army[player][i][ship_type] == 'cruiser' :
                             dict_army[player][i][move_cost]-=1
 
                 else:
-                print('you can\'t  upgrade movement ')
+                    print('you can\'t  upgrade movement ')
 
     return dict_army,dict_recruit 
 
