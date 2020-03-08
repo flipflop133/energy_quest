@@ -88,7 +88,6 @@ def game(play_game):
     
     # create dictionnary of the army
     dict_army = board_values[3]
-    print(dict_army)
 
     # call the display_board function
     display_board(dict_board,height,width,player1,player2,dict_army)
@@ -97,7 +96,7 @@ def game(play_game):
     # start the main game loop
     while play_game != False:
         dict_order = get_order(player1,player2)
-        dict_army,dict_board = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
+        dict_army, dict_board = recruit_units(dict_order,dict_army,player1,player2,dict_board,dict_recruit)
         dict_board = move(dict_order,dict_board,dict_army,player1,player2)
         display_board(dict_board,height,width,player1,player2,dict_army)
         upgrade(dict_order,dict_army,dict_recruit,player1,player2)
@@ -205,7 +204,6 @@ def create_board(board_file,player1,player2):
         for y in range(height):
             dict_board['@%d-%d'%(x+1,y+1)] = {}
 
-    print(dictFile)
     # add hubs to the board's dictionnary
     hub_1 = dictFile['hubs'][0]
     hub_2 = dictFile['hubs'][1]
@@ -217,10 +215,8 @@ def create_board(board_file,player1,player2):
     dict_board['@%d-%d'%(key1_hub_2,key2_hub_2)] = {player2:{'hub':''}}
 
     # create dict_army
-    # dict_army = {player1:{'hub':{'hp'=300,'current_energy'=1500,'energy_capacity'=1500,'regeneration'=25}}
-    print(dictFile['hubs'][0][2])
-    hub_1 = {'hp':int(dictFile['hubs'][0][2]),'current_energy':int(dictFile['hubs'][0][3]),'energy_capacity':int(dictFile['hubs'][0][3]),'regeneration':int(dictFile['hubs'][0][4])}
-    hub_2 = {'hp':int(dictFile['hubs'][1][2]),'current_energy':int(dictFile['hubs'][1][3]),'energy_capacity':int(dictFile['hubs'][1][3]),'regeneration':int(dictFile['hubs'][1][4])}
+    hub_1 = {'hp':int(dictFile['hubs'][0][2]),'current_energy':int(dictFile['hubs'][0][3]),'energy_capacity':int(dictFile['hubs'][0][3]),'regeneration':int(dictFile['hubs'][0][4]),'ship_type':'hub'}
+    hub_2 = {'hp':int(dictFile['hubs'][1][2]),'current_energy':int(dictFile['hubs'][1][3]),'energy_capacity':int(dictFile['hubs'][1][3]),'regeneration':int(dictFile['hubs'][1][4]),'ship_type':'hub'}
     dict_army = {player1:{'hub':hub_1},player2:{'hub':hub_2}}
 
     # add peaks to the board's dictionnary
@@ -301,7 +297,7 @@ def move(dict_order,dict_board,dict_army,player1,player2):
                         tempDict[player][moveList[0]].update(unit)
                         dict_board[case].update(tempDict)
     
-    # TODO : make the cruiser for the move
+    # TODO : make the cruiser pay  the move
     return dict_board
     
 def upgrade(dict_order,dict_army,dict_recruit,player1,player2):
@@ -335,57 +331,59 @@ def upgrade(dict_order,dict_army,dict_recruit,player1,player2):
         
         # extract the upgrade order
         for i in range(len(dict_order[player]['upgrade'])):
+            print(dict_order)
             upgrade = dict_order[player]['upgrade'][i]
             upgradeList = upgrade.split(':')
             upgradeList.append(player)
-            print(upgradeList)
-
-            # choose which upgrade must be done
-            print(dict_recruit)
+        # choose which upgrade must be done
+        if upgradeList!='':
             if upgradeList[1] == 'regeneration':
-                if dict_army[player]['hub']['current_energy']>=750 and dict_recruit[player]['research']['regeneration'] < 10 :
-                     dict_army[player]['hub']['regeneration']+=5
-                     dict_recruit[player]['research']['regeneration']+=1
-
-                else:
-                    print("you can't upgrade energy regenaretion")
-                
+                    if dict_army[player]['hub']['current_energy']>=750 and dict_recruit[player]['research']['regeneration'] < 10 :
+                        dict_army[player]['hub']['regeneration']+=5
+                        dict_recruit[player]['research']['regeneration']+=1
+                    else:
+                        print("you can't upgrade energy regeneration")
+                    
             elif upgradeList[1] == 'storage':
-                print(dict_army)
-                print(dict)
-                if dict_army[player]['hub']['current_energy']>=600 and dict_recruit[player]['research']['storage'] < 12 :
-                    dict_recruit[player]['research']['storage']+=1
-                    dict_recruit[player]['tanker']['energy_capacity']+=100
-                    for i in range(len(dict_army[player])):
-                        print(i)
-                        if dict_army[player][i]['ship_type'] == 'tanker' :
-                            dict_army[player][i]['energy_capacity']+=100
+                    if dict_army[player]['hub']['current_energy']>=600 and dict_recruit[player]['research']['storage'] < 12 :
+                        dict_recruit[player]['research']['storage']+=1
+                        dict_recruit[player]['tanker']['energy_capacity']+=100
+                        temp_dict = list(dict_army[player])
+                        """ for i in range(len(temp_dict)):
+                            if dict_army[player][temp_dict[i]]['ship_type'] == 'tanker':
+                                dict_army[player][temp_dict[i]]['energy_capacity']+=100
+                                print('1 time') """
+                    else:
+                        print("you can't upgrade energy capacity")
+                    
+            elif upgradeList[1] == 'range':
+                    if dict_army[player]['hub']['current_energy']>=400 and dict_recruit[player]['research']['range'] < 5 :
+                        dict_recruit[player]['research']['range']+=1
+                        dict_recruit[player]['cruiser']['shooting_range']+=1
+                        temp_dict = list(dict_army[player])
+                        for i in range(len(temp_dict)):
+                            if dict_army[player][temp_dict[i]]['ship_type'] == 'cruiser':
+                                dict_army[player][temp_dict[i]]['shooting_range']+=1
+                    else:
+                        print("you can't upgrade shooting range")
 
-                else:
-                    print("you can't upgrade energy capacity")
-                
-            elif upgradeList[1] == range:
-                if dict_army[player]['hub']['current_energy']>=400 and dict_recruit[player]['research']['range'] < 5 :
-                    dict_recruit[player]['research']['range']+=1
-                    dict_recruit[player]['cruiser']['shooting_range']+=1
-                    for i in range(len(dict_army[player])):
-                        if dict_army[player][i]['ship_type'] == 'cruiser' :
-                            dict_army[player][i]['shooting_range']+=1
-
-                else:
-                    print("you can't upgrade shooting range")
-
-            elif upgradeList[1] == move:
-                if dict_army[player]['hub']['current_energy']>=500 and dict_recruit[player]['research']['move'] < 5 :
-                    dict_recruit[player]['research']['move']+=1
-                    dict_recruit[player]['cruiser']['move_cost']-=1
-                    for i in range(len(dict_army[player])):
-                        if dict_army[player][i]['ship_type'] == 'cruiser' :
-                            dict_army[player][i]['move_cost']-=1
-
-                else:
-                    print("you can't upgrade movement")
-
+            elif upgradeList[1] == 'move':
+                    if dict_army[player]['hub']['current_energy']>=500 and dict_recruit[player]['research']['move'] < 5 :
+                        dict_recruit[player]['research']['move']+=1
+                        dict_recruit[player]['cruiser']['move_cost']-=1
+                        temp_dict = list(dict_army[player])
+                        for i in range(len(temp_dict)):
+                            if dict_army[player][temp_dict[i]]['ship_type'] == 'cruiser':
+                                dict_army[player][temp_dict[i]]['move_cost']-=1
+                    else:
+                        print("you can't upgrade movement")
+        # reset upgradeList
+        upgradeList = ''
+    
+    print('DICT RECRUIT')
+    print(dict_recruit)
+    print("DICT ARMY")
+    print(dict_army)
     return dict_army,dict_recruit 
 
 def energy_transfert(dict_army,dict_order,dict_board,player1,player2):
