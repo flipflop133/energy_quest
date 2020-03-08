@@ -429,6 +429,9 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     implementation: François Bechet (v.1 01/03/20)
     """
 
+    # create a copy of dict_recruit because otherwise it would point to the same object and cause issues later
+    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+    
     # extract the units from dict_order and place them into dict_board and dict_army
     for j in range(1,3):
         if j == 1:
@@ -448,9 +451,9 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
             # add the unit to dict_army
             if unitList[0] not in dict_army[player]: # verify that the unit is not already in dict_army
                 if 'cruiser' in unitList: 
-                    dict_army[player][unitList[0]] = dict_recruit[player]['cruiser']
+                    dict_army[player][unitList[0]] = dict_recruit_copy[player]['cruiser']
                 elif 'tanker' in unitList:
-                    dict_army[player][unitList[0]] = dict_recruit[player]['tanker']
+                    dict_army[player][unitList[0]] = dict_recruit_copy[player]['tanker']
             
     return dict_army, dict_board
 
