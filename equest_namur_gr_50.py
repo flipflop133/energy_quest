@@ -80,7 +80,7 @@ def game(play_game):
     players = (player1,player2)
 
     # create dict_recruit
-    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # call the create_board function and store its return values
     board_values = create_board("board.txt",players)
@@ -216,11 +216,10 @@ def create_board(board_file,players):
 
     # add peaks to the board's dictionnary
     for i in range(len(dictFile['peaks'])):
-        peak = 'peak_'
-        peak = peak + str(i)
         list_peak = dictFile['peaks'][i]
         energy = int(list_peak[2])
-        dict_board['@%d-%d'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{peak:{'energy':energy}}}
+        dict_board['@%d-%d'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{'energy':energy}}
+    print(dict_board)
 
     # returns
     return dict_board,height,width,dict_army
@@ -243,7 +242,6 @@ def attack(dict_order,dict_army,dict_board,players):
     specification: Dominik Everaert (v.3 24/02/20)
     implementation : Dominik Everaert (v.1 11/03/20)
     """
-    print(dict_board)
     # extract the attack order from dict_order and change unit stat
     attackList = ''
     for j in range(1,3):
@@ -286,10 +284,8 @@ def attack(dict_order,dict_army,dict_board,players):
         #changing unit stat if attack succesful
             #if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True and dict_army[attacker][shooter_name]['current_energy'] >= 10*damage:
             dict_army[attacker][shooter_name]['current_energy'] -= 10*damage
-            print(dict_army)
             for i in target_units:
                 dict_army[target][i]['hp'] -= damage
-    print(dict_board)
     return dict_board, dict_army
 def move(dict_order,dict_board,dict_army,players):
     """execute move order of each player and modify board and stats of moving units
@@ -440,34 +436,61 @@ def energy_transfert(dict_army,dict_order,dict_board,players):
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
     """
+    print(dict_board)
     # TODO : changer la boucle for, comme on a un tuple des joueurs c'est mieux de le parcourir
-    print(dict_order)
-    order_peak = []
     for j in range(1,3):
+        order_peak = []
+        order_unit = []
+        order_hub = []
         if j == 1:
             player = players[0]
-            # extract order from dict_order and place each kind of transfert order in a specific list
-            tempList = dict_order[player]['transfer']
-            for i in range(len(tempList)):
-                temp_order=tempList[i]
-                if ':<' in temp_order:
-                    order_peak = temp_order.split(':<')
-                elif ':>' in temp_order:
-                    order_unit = temp_order.split(':>')
-                elif '>:' in temp_order:
-                    order_hub = temp_order.split('>:')
-
-            # execute peak to tanker transfert
-            if order_peak != []:
-                peak = dict_board['@'+order_peak[1]]['peak']
-                print(peak)
-                unit = dict_army[player][order_peak[0]]
-                print(unit)
-            # execute tanker to unit transfert
-            # execute tanker to hub transfert
         else:
             player = players[1]
+        # extract order from dict_order and place each kind of transfert order in a specific list
+        tempList = dict_order[player]['transfer']
+        for i in range(len(tempList)):
+            temp_order=tempList[i]
+            if ':<' in temp_order:
+                order_peak = temp_order.split(':<')
+            elif ':>' in temp_order:
+                order_unit = temp_order.split(':>')
+            elif '>:' in temp_order:
+                order_hub = temp_order.split('>:')
 
+        # execute peak to unit transfert
+        if order_peak != []:
+            if dict_board['@'+order_peak[1]]['peak']['energy'] > 0:
+                energy_unit = dict_army[player][order_peak[0]]['energy_capacity'] - dict_army[player][order_peak[0]]['current_energy']
+                if (dict_board['@'+order_peak[1]]['peak']['energy'] - energy_unit) == 0:
+                    energy = dict_board['@'+order_peak[1]]['peak']['energy']
+                else:
+                    energy = energy_unit - dict_board['@'+order_peak[1]]['peak']['energy']
+                print(energy)
+                if energy > 0:
+                    dict_board['@'+order_peak[1]]['peak']['energy']-=energy
+                    dict_army[player][order_peak[0]]['current_energy']+=energy
+            # if peak's energy reach 0, remove the peak
+            if dict_board['@'+order_peak[1]]['peak']['energy'] == 0:
+                del dict_board['@'+order_peak[1]]['peak']
+
+        # execute unit to unit transfert
+        if order_unit != []:
+            if dict_army[player][order_unit[0]]['energy_capacity'] - dict_army[player][order_unit[0]]['current_energy'] -  dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy'] == 0:
+                energy = dict_army[player][order_unit[0]]['energy_capacity'] - dict_army[player][order_unit[0]]['current_energy']
+            else:
+                energy = dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy'] - dict_army[player][order_unit[0]]['energy_capacity'] - dict_army[player][order_unit[0]]['current_energy']
+            dict_army[player][order_unit[0]]['current_energy']-=energy
+            dict_army[player][order_unit[1]]['current_energy']+=energy
+
+        # execute unit to hub transfert
+        if order_hub != []:
+            # do the energy transfert
+            dict_army[player][order_hub[0]]['current_energy']-=energy
+            dict_army[player][order_hub[1]]['current_energy']-=energy
+
+        # clean the temporary list
+        tempList = []
+    return dict_army, dict_board
 def regenerate(dict_army,players):
     """makes hub regenerate energy(at the end of the turn)
 
@@ -506,7 +529,7 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     """
 
     # create a copy of dict_recruit because otherwise it would point to the same object and cause issues later
-    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # extract the units from dict_order and place them into dict_board and dict_army
     for j in range(1,3):
