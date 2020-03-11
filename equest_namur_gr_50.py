@@ -225,7 +225,7 @@ def create_board(board_file,players):
     # returns
     return dict_board,height,width,dict_army
     
-def attack(dict_order,dict_army,players):
+def attack(dict_order,dict_army,dict_board,players):
     """execute attack order of each player and modify stats of each effected unit
 
     parameters
@@ -242,6 +242,7 @@ def attack(dict_order,dict_army,players):
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
     """
+    print(dict_board)
     # extract the attack order from dict_order and change unit stat
     attackList = ''
     for j in range(1,3):
@@ -560,9 +561,11 @@ def play_turn(dict_board,dict_army,dict_recruit,width,height,players):
 
     dict_order = get_order(players)
     recruit_units(dict_order,dict_army,players,dict_board,dict_recruit)
-    move(dict_order,dict_board,dict_army,players)
     upgrade(dict_order,dict_army,dict_recruit,players)
+    attack(dict_order,dict_army,dict_board,players)
+    move(dict_order,dict_board,dict_army,players)
     energy_transfert(dict_army,dict_order,dict_board,players)
+    # regenerate
     display_board(dict_board,height,width,players,dict_army)
 
 game(True)
