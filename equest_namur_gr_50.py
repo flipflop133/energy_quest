@@ -242,6 +242,26 @@ def attack(dict_order,dict_army,players):
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
     """
+    # extract the attack order from dict_order and change unit stat
+    attackList = ''
+    for j in range(1,3):
+        if j == 1:
+            player = players[0]
+        else:
+            player = players[1]
+      # extract the attack order 
+        for i in range(len(dict_order[player]['attack'])):
+            attack = dict_order[player]['attack'][i]
+            attackList = attack.split(':')
+            spliting = attacklist[1].split('=')
+            position = spliting[0]
+            dammage = spliting[1]
+            attacklist = attackList [1]
+            attackList.append(position)
+            attackList.append(dammage)
+            attackList.append(player)
+            
+
 
 def move(dict_order,dict_board,dict_army,players):
     """execute move order of each player and modify board and stats of moving units
