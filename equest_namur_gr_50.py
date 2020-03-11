@@ -392,6 +392,34 @@ def energy_transfert(dict_army,dict_order,dict_board,players):
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
     """
+    # TODO : changer la boucle for, comme on a un tuple des joueurs c'est mieux de le parcourir
+    print(dict_order)
+    order_peak = []
+    for j in range(1,3):
+        if j == 1:
+            player = players[0]
+            # extract order from dict_order and place each kind of transfert order in a specific list
+            tempList = dict_order[player]['transfer']
+            for i in range(len(tempList)):
+                temp_order=tempList[i]
+                if ':<' in temp_order:
+                    order_peak = temp_order.split(':<')
+                elif ':>' in temp_order:
+                    order_unit = temp_order.split(':>')
+                elif '>:' in temp_order:
+                    order_hub = temp_order.split('>:')
+            
+            # execute peak to tanker transfert
+            if order_peak != []:
+                peak = dict_board['@'+order_peak[1]]['peak']
+                print(peak)
+                unit = dict_army[player][order_peak[0]]
+                print(unit)
+            # execute tanker to unit transfert
+            # execute tanker to hub transfert
+        else:
+            player = players[1]
+
 def regenerate(dict_army,players):
     """makes hub regenerate energy(at the end of the turn)
 
@@ -514,6 +542,7 @@ def play_turn(dict_board,dict_army,dict_recruit,width,height,players):
     recruit_units(dict_order,dict_army,players,dict_board,dict_recruit)
     move(dict_order,dict_board,dict_army,players)
     upgrade(dict_order,dict_army,dict_recruit,players)
+    energy_transfert(dict_army,dict_order,dict_board,players)
     display_board(dict_board,height,width,players,dict_army)
 
 game(True)
