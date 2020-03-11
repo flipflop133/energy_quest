@@ -17,7 +17,7 @@ def display_board(dict_board,height,width,players,dict_army):
 
     """
     # define colored colors
-    default_color = colored.fg('#000000')
+    default_color = colored.attr('reset')
     green = colored.fg('#00ff00')
     red = colored.fg('#ff0000')
     blue = colored.fg('#0000ff')
@@ -33,7 +33,7 @@ def display_board(dict_board,height,width,players,dict_army):
     n=0
     for x in range(width):
         n = 1
-        for y in range(height):      
+        for y in range(height):
             if players[0] in dict_board['@%d-%d'%(x+1,y+1)]:
                 tempDict = dict_board['@%d-%d'%(x+1,y+1)][players[0]]
                 if 'hub' in tempDict:
@@ -80,14 +80,14 @@ def game(play_game):
     players = (player1,player2)
 
     # create dict_recruit
-    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
-    
+    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+
     # call the create_board function and store its return values
     board_values = create_board("board.txt",players)
     dict_board = board_values[0]
     height = board_values[1]
     width = board_values[2]
-    
+
     # create dictionnary of the army
     dict_army = board_values[3]
 
@@ -105,7 +105,7 @@ def get_order(players):
         RECRUIT ORDER : 'alpha:tanker bravo:cruiser'
         UPGRADE ORDER : 'upgrade:regeneration; upgrade:storage; upgrade:shooting_range; upgrade:move_cost'
         MOVE ORDER(name:@r-c where r is row and c is column) : 'alpha:@30-31'
-        ATTACK ORDER(nom:*r-c=q where r,c is position of target and q are damages) : 'charlie:*10-15=23' 
+        ATTACK ORDER(nom:*r-c=q where r,c is position of target and q are damages) : 'charlie:*10-15=23'
         TRANSFER ORDER(nom:<r-c where the tanker take energy in the targeted hub; name1:>name2 where name1(tanker) gives energy to name2(cruiser or hub)) : alpha:<30-31 bravo:>charlie delta:>hub
 
     parameters
@@ -115,7 +115,7 @@ def get_order(players):
     return
     ------
     dict_order: dictionnary with all the order
-    
+
     Version
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
@@ -162,7 +162,7 @@ def create_board(board_file,players):
     ----------
     board_file: file in which all the element needed for the board are(path)
     players: names of the players(tuple)
-    
+
     return
     ------
     dict_board: dictionnary with all the characteristic of the board (dict)
@@ -224,7 +224,7 @@ def create_board(board_file,players):
 
     # returns
     return dict_board,height,width,dict_army
-    
+
 def attack(dict_order,dict_army,dict_board,players):
     """execute attack order of each player and modify stats of each effected unit
 
@@ -233,7 +233,7 @@ def attack(dict_order,dict_army,dict_board,players):
     dict_order[attack]: dictionnary of attack order(dict)
     dict_army: dictionnary with the unit of the two player(dict)
     players: names of the players(tuple)
-    
+
     return
     ------
     dict_army: dictionnary of the 2 army modified in result of the attack(dict)
@@ -241,39 +241,66 @@ def attack(dict_order,dict_army,dict_board,players):
     Version
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
+    implementation : Dominik Everaert (v.1 11/03/20)
     """
     print(dict_board)
     # extract the attack order from dict_order and change unit stat
     attackList = ''
     for j in range(1,3):
         if j == 1:
-            player = players[0]
+            attacker = players[0]
+            target = players[1]
         else:
-            player = players[1]
-      # extract the attack order 
-        for i in range(len(dict_order[player]['attack'])):
-            attack = dict_order[player]['attack'][i]
-            attackList = attack.split(':')
-            spliting = attacklist[1].split('=')
-            position = spliting[0]
-            dammage = spliting[1]
-            attacklist = attackList [1]
-            attackList.append(position)
-            attackList.append(dammage)
-            attackList.append(player)
-            
+            attacker = players[1]
+            target = players[0]
+      # extract the attack order
+        for i in range(len(dict_order[attacker]['attack'])):
+            attack = dict_order[attacker]['attack'][i]
+        # change order into list [shooter_name,rest]
+            attackList = attack.split(':*')
+        # separate rest into position and damage
+            spliting = attackList[1].split('=')
+            shooter_name = attackList[0]
+            damage = int(spliting[1])
+            target_position = spliting[0]
+        # separate position_target into target x et target y
+            targetxy = target_position.split('-')
+        #put everything into one list [shooter_name,position_target,damage dealt]
+            #attackList = attackList [0]
+            #attackList.append(target_position)
+            #attackList.append(damage)
+        # separating target position
+            x_target = targetxy[0]
+            y_target = targetxy[1]
+            target_units = []
+            for unit in dict_board['@%s-%s'%(x_target,y_target)][target]:
+                target_units.append(unit)
 
-
+            #search shooter position
+            for key,value in dict_board.items():
+                    case = key
+                    case.split('-')
+                    case_0 = case[0].strip('@')
+                    x_shooter = case_0
+                    y_shooter = case[1]
+        #changing unit stat if attack succesful
+            #if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True and dict_army[attacker][shooter_name]['current_energy'] >= 10*damage:
+            dict_army[attacker][shooter_name]['current_energy'] -= 10*damage
+            print(dict_army)
+            for i in target_units:
+                dict_army[target][i]['hp'] -= damage
+    print(dict_board)
+    return dict_board, dict_army
 def move(dict_order,dict_board,dict_army,players):
     """execute move order of each player and modify board and stats of moving units
-    
+
     prameters
     ---------
     dict_order[move]: dictionnary of move order(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
     dict_army: dictionnary with the unit of the two player(dict)
     players: names of the players(tuple)
-    
+
     return
     ------
     dict_board: dictionnary with all the characteristic of the board (dict)
@@ -290,7 +317,7 @@ def move(dict_order,dict_board,dict_army,players):
             player = players[0]
         else:
             player = players[1]
-        
+
         # extract the move order
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
@@ -310,10 +337,10 @@ def move(dict_order,dict_board,dict_army,players):
                         tempDict = {player:{moveList[0]:{}}}
                         tempDict[player][moveList[0]].update(unit)
                         dict_board[case].update(tempDict)
-    
+
     # TODO : make the cruiser pay  the move
     return dict_board
-    
+
 def upgrade(dict_order,dict_army,dict_recruit,players):
     """execute the upgrage order of each player and modify the stats of each affected unit
 
@@ -341,7 +368,7 @@ def upgrade(dict_order,dict_army,dict_recruit,players):
             player = players[0]
         else:
             player = players[1]
-        
+
         # extract the upgrade order
         for i in range(len(dict_order[player]['upgrade'])):
             upgrade = dict_order[player]['upgrade'][i]
@@ -355,7 +382,7 @@ def upgrade(dict_order,dict_army,dict_recruit,players):
                         dict_recruit[player]['research']['regeneration']+=1
                     else:
                         print("you can't upgrade energy regeneration")
-                    
+
             elif upgradeList[1] == 'storage':
                     if (dict_army[player]['hub']['current_energy'])>=600 and (dict_recruit[player]['research']['storage']) < 12 :
                         dict_recruit[player]['research']['storage']+=1
@@ -367,7 +394,7 @@ def upgrade(dict_order,dict_army,dict_recruit,players):
                                 print('1 time')
                     else:
                         print("you can't upgrade energy capacity")
-                    
+
             elif upgradeList[1] == 'range':
                     if (dict_army[player]['hub']['current_energy'])>=400 and (dict_recruit[player]['research']['range']) < 5 :
                         dict_recruit[player]['research']['range']+=1
@@ -391,19 +418,19 @@ def upgrade(dict_order,dict_army,dict_recruit,players):
                         print("you can't upgrade movement")
         # reset upgradeList
         upgradeList = ''
-    
-    return dict_army,dict_recruit 
+
+    return dict_army,dict_recruit
 
 def energy_transfert(dict_army,dict_order,dict_board,players):
     """execute transfert order and modify affected unit's stat
-    
+
     parameters
     ----------
     dict_army: dictionnary with the unit of the two player(dict)
     dict_order[energy_transfert]:dictionnary of energy transfert order(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
     players: names of the players(tuple)
-    
+
     return
     ------
     dict_army: dictionnary with the unit of the two player(dict)
@@ -429,7 +456,7 @@ def energy_transfert(dict_army,dict_order,dict_board,players):
                     order_unit = temp_order.split(':>')
                 elif '>:' in temp_order:
                     order_hub = temp_order.split('>:')
-            
+
             # execute peak to tanker transfert
             if order_peak != []:
                 peak = dict_board['@'+order_peak[1]]['peak']
@@ -471,7 +498,7 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     return
     ------
     dict_army: dictionnary with the unit of the two player(dict)
-    
+
     Version
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
@@ -479,8 +506,8 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     """
 
     # create a copy of dict_recruit because otherwise it would point to the same object and cause issues later
-    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
-    
+    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':400, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':600, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+
     # extract the units from dict_order and place them into dict_board and dict_army
     for j in range(1,3):
         if j == 1:
@@ -499,32 +526,12 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
                     dict_board[case][player].update(unitDict)
             # add the unit to dict_army
             if unitList[0] not in dict_army[player]: # verify that the unit is not already in dict_army
-                if 'cruiser' in unitList: 
+                if 'cruiser' in unitList:
                     dict_army[player][unitList[0]] = dict_recruit_copy[player]['cruiser']
                 elif 'tanker' in unitList:
                     dict_army[player][unitList[0]] = dict_recruit_copy[player]['tanker']
-            
+
     return dict_army, dict_board
-
-def energy_mining(dict_army,dict_order,dict_board,players):
-    """execute mining order and modify affected unit's stat and energy peak's stat
-    
-    parameters
-    ----------
-    dict_army: dictionnary with the unit of the two player(dict)
-    dict_order[energy_mining]: dictionnary of energy mining order(dict)
-    dict_board: dictionnary with all the characteristic of the board (dict)
-    players: names of the players(tuple)
-    
-    return
-    ------
-    dict_army: dictionnary with the unit of the two player(dict)
-    dict_board: dictionnary with all the characteristic of the board (dict)
-
-    Version
-    −−−−−−−
-    specification: François Bechet (v.3 24/02/20)
-    """
 
 def compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target):
     """compute the distance between a cruiser and its target
