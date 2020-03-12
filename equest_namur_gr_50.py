@@ -441,36 +441,40 @@ def energy_transfert(dict_army,dict_order,dict_board,players):
 
         # execute peak to unit transfert
         if order_peak != []:
-            if dict_board['@'+order_peak[1]]['peak']['energy'] > 0:
-                energy_unit = dict_army[player][order_peak[0]]['energy_capacity'] - dict_army[player][order_peak[0]]['current_energy']
-                if (dict_board['@'+order_peak[1]]['peak']['energy'] - energy_unit) == 0:
-                    energy = dict_board['@'+order_peak[1]]['peak']['energy']
-                else:
-                    energy = energy_unit - dict_board['@'+order_peak[1]]['peak']['energy']
-                print(energy)
-                if energy > 0:
-                    dict_board['@'+order_peak[1]]['peak']['energy']-=energy
-                    dict_army[player][order_peak[0]]['current_energy']+=energy
+            energy_unit = dict_army[player][order_peak[0]]['energy_capacity'] - dict_army[player][order_peak[0]]['current_energy']
+            if energy_unit >= dict_board['@'+order_peak[1]]['peak']['energy']:
+                energy = dict_board['@'+order_peak[1]]['peak']['energy']
+            else:
+                energy = energy_unit
+            dict_board['@'+order_peak[1]]['peak']['energy']-=energy
+            dict_army[player][order_peak[0]]['current_energy']+=energy
+
             # if peak's energy reach 0, remove the peak
             if dict_board['@'+order_peak[1]]['peak']['energy'] == 0:
                 del dict_board['@'+order_peak[1]]['peak']
 
         # execute unit to unit transfert
         if order_unit != []:
-            if dict_army[player][order_unit[0]]['energy_capacity'] - dict_army[player][order_unit[0]]['current_energy'] -  dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy'] == 0:
-                energy = dict_army[player][order_unit[0]]['energy_capacity'] - dict_army[player][order_unit[0]]['current_energy']
+            energy_unit = dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy']
+            if energy_unit >= dict_army[player][order_unit[0]]['current_energy']:
+                energy = dict_army[player][order_unit[0]]['current_energy']
             else:
-                energy = dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy'] - dict_army[player][order_unit[0]]['energy_capacity'] - dict_army[player][order_unit[0]]['current_energy']
+                energy = energy_unit
             dict_army[player][order_unit[0]]['current_energy']-=energy
             dict_army[player][order_unit[1]]['current_energy']+=energy
 
         # execute unit to hub transfert
         if order_hub != []:
             # the hub must not be full
-            if dict_army[player][order_hub[1]]['current_energy'] < dict_army[player][order_hub[1]]['energy_capacity']:
-                # do the energy transfert
-                dict_army[player][order_hub[0]]['current_energy']-=energy
-                dict_army[player][order_hub[1]]['current_energy']+=energy
+            energy_hub = dict_army[player][order_hub[1]]['energy_capacity'] - dict_army[player][order_hub[1]]['current_energy']
+            if energy_hub >= dict_army[player][order_hub[0]]['current_energy']:
+                energy = dict_army[player][order_hub[0]]['current_energy']
+            else:
+                energy = energy_hub
+
+            # do the energy transfert
+            dict_army[player][order_hub[0]]['current_energy']-=energy
+            dict_army[player][order_hub[1]]['current_energy']+=energy
 
     return dict_army, dict_board
 def regenerate(dict_army,players):
