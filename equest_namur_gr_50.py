@@ -133,12 +133,10 @@ def get_order(players):
     # convert list_oder to dict_order
     dict_order = {players[0]:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]},players[1]:{'move':[],'attack':[],'upgrade':[],'recruit':[],'transfer':[]}}
     # add orders of players to dict_order
-    for j in range(1,3): #j is to loop through player1 and player2
-        if j == 1:
-            player = players[0]
+    for player in players:
+        if player == players[0]:
             list_order_player = list_order_player1
         else:
-            player = players[1]
             list_order_player = list_order_player2
         for i in range(len(list_order_player)):
             if '@' in list_order_player[i]:
@@ -219,7 +217,6 @@ def create_board(board_file,players):
         list_peak = dictFile['peaks'][i]
         energy = int(list_peak[2])
         dict_board['@%d-%d'%(int(list_peak[0]),int(list_peak[1]))] = {'peak':{'energy':energy}}
-    print(dict_board)
 
     # returns
     return dict_board,height,width,dict_army
@@ -244,7 +241,7 @@ def attack(dict_order,dict_army,dict_board,players):
     """
     # extract the attack order from dict_order and change unit stat
     attackList = ''
-    for j in range(1,3):
+    for j in range(1,3): #TODO : loop through the player list
         if j == 1:
             attacker = players[0]
             target = players[1]
@@ -308,12 +305,7 @@ def move(dict_order,dict_board,dict_army,players):
     """
     # extract the move order from dict_order and change the position unit in dict_board
     moveList = ''
-    for j in range(1,3):
-        if j == 1:
-            player = players[0]
-        else:
-            player = players[1]
-
+    for player in players:
         # extract the move order
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
@@ -359,12 +351,7 @@ def upgrade(dict_order,dict_army,dict_recruit,players):
     """
      # extract the upgrade order from dict_order and change the stat of unit
     upgradeList = ''
-    for j in range(1,3):
-        if j == 1:
-            player = players[0]
-        else:
-            player = players[1]
-
+    for player in players:
         # extract the upgrade order
         for i in range(len(dict_order[player]['upgrade'])):
             upgrade = dict_order[player]['upgrade'][i]
@@ -436,16 +423,11 @@ def energy_transfert(dict_army,dict_order,dict_board,players):
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
     """
-    print(dict_board)
-    # TODO : changer la boucle for, comme on a un tuple des joueurs c'est mieux de le parcourir
-    for j in range(1,3):
+    for player in players:
         order_peak = []
         order_unit = []
         order_hub = []
-        if j == 1:
-            player = players[0]
-        else:
-            player = players[1]
+        tempList = []
         # extract order from dict_order and place each kind of transfert order in a specific list
         tempList = dict_order[player]['transfer']
         for i in range(len(tempList)):
@@ -484,12 +466,12 @@ def energy_transfert(dict_army,dict_order,dict_board,players):
 
         # execute unit to hub transfert
         if order_hub != []:
-            # do the energy transfert
-            dict_army[player][order_hub[0]]['current_energy']-=energy
-            dict_army[player][order_hub[1]]['current_energy']-=energy
+            # the hub must not be full
+            if dict_army[player][order_hub[1]]['current_energy'] < dict_army[player][order_hub[1]]['energy_capacity']:
+                # do the energy transfert
+                dict_army[player][order_hub[0]]['current_energy']-=energy
+                dict_army[player][order_hub[1]]['current_energy']+=energy
 
-        # clean the temporary list
-        tempList = []
     return dict_army, dict_board
 def regenerate(dict_army,players):
     """makes hub regenerate energy(at the end of the turn)
@@ -532,11 +514,7 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # extract the units from dict_order and place them into dict_board and dict_army
-    for j in range(1,3):
-        if j == 1:
-            player = players[0]
-        else:
-            player = players[1]
+    for player in players:
         # extract the order from dict_order
         for i in range(len(dict_order[player]['recruit'])):
             unit = dict_order[player]['recruit'][i]
