@@ -491,9 +491,17 @@ def regenerate(dict_army,players):
 
     Version
     −−−−−−−
-    specification: Dominik Everaert (v.1 24/02/20)
+    specification: Dominik Everaert (v.2 24/02/20)
+    implementation : Dominik Everaert (v.1 13/03/20)
     """
+    for player in players:
+        regen = dict_army[player][hub][regeneration]
+        empty=dict_army[player][hub][energy_capacity]-dict_army[player][hub][current_energy]
+        if empty < regen:
+            regen = empty
+        dict_army[player][hub][current_energy] += regen
 
+    return dict_army
 def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     """execute recruit order and add unit to the army
 
