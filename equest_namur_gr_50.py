@@ -84,7 +84,7 @@ def game(play_game):
     dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # call the create_board function and store its return values
-    board_values = create_board("/home/francois/projet_progra/energy_quest/board.txt",players)
+    board_values = create_board("board.txt",players)
     dict_board = board_values[0]
     height = board_values[1]
     width = board_values[2]
@@ -317,25 +317,48 @@ def move(dict_order,dict_board,dict_army,players):
             moveList = move.split(':')
             moveList.append(player)
 
-        # move the unit position in dict_board
-        for i in dict_board:
-            if moveList != []:
-                #store the case position
-                case = moveList[1]
-                # change the position of the unit in dict_board
-                if player in dict_board[i]:
-                    tempBoard = dict_board[i][player]
-                    if moveList[0] in tempBoard:
-                        unit = (dict_board[i][player][moveList[0]])
-                        tempDict = {player:{moveList[0]:{}}}
-                        tempDict[player][moveList[0]].update(unit)
-                        dict_board[case].update(tempDict)
-
-        # make the cruiser pay  the move
+        # check manhattan distance
+        x_shooter = 0
+        y_shooter = 0
+        x_target = 0
+        y_target = 0
         if moveList != []:
-            if dict_army[player][moveList[0]]['ship_type'] == 'cruiser':
-                move_cost = dict_army[player][moveList[0]]['move_cost']
-                dict_army[player][moveList[0]]['current_energy']-=move_cost
+            # destination correspond to target
+            print(moveList)
+            case = moveList[1].split('-')
+            case_0 = case[0].strip('@')
+            x_target = int(case_0)
+            y_target = int(case[1])
+            print(x_target)
+            # unit to move correspond to shooter
+            for key,value in dict_board.items():
+                if player in value:
+                    unit = value['francois']
+                    if moveList[0] in unit:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_shooter = int(case_0)
+                        y_shooter = int(case[1])
+        if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True:          
+            # move the unit position in dict_board
+            for i in dict_board:
+                if moveList != []:
+                    #store the case position
+                    case = moveList[1]
+                    # change the position of the unit in dict_board
+                    if player in dict_board[i]:
+                        tempBoard = dict_board[i][player]
+                        if moveList[0] in tempBoard:
+                            unit = (dict_board[i][player][moveList[0]])
+                            tempDict = {player:{moveList[0]:{}}}
+                            tempDict[player][moveList[0]].update(unit)
+                            dict_board[case].update(tempDict)
+
+            # make the cruiser pay  the move
+            if moveList != []:
+                if dict_army[player][moveList[0]]['ship_type'] == 'cruiser':
+                    move_cost = dict_army[player][moveList[0]]['move_cost']
+                    dict_army[player][moveList[0]]['current_energy']-=move_cost
     return dict_board
 
 def upgrade(dict_order,dict_army,dict_recruit,players):
