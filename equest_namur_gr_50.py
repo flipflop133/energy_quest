@@ -1,5 +1,6 @@
 # imports
 import colored
+import math
 
 def display_board(dict_board,height,width,players,dict_army):
     """display the board at the beginning of the game
@@ -83,7 +84,7 @@ def game(play_game):
     dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # call the create_board function and store its return values
-    board_values = create_board("board.txt",players)
+    board_values = create_board("/home/francois/projet_progra/energy_quest/board.txt",players)
     dict_board = board_values[0]
     height = board_values[1]
     width = board_values[2]
@@ -241,6 +242,10 @@ def attack(dict_order,dict_army,dict_board,players):
     """
     # extract the attack order from dict_order and change unit stat
     attackList = ''
+    x_shooter =''
+    y_shooter =''
+    x_target = ''
+    y_target = ''
     for j in range(1,3): #TODO : loop through the player list
         if j == 1:
             attacker = players[0]
@@ -251,38 +256,38 @@ def attack(dict_order,dict_army,dict_board,players):
       # extract the attack order
         for i in range(len(dict_order[attacker]['attack'])):
             attack = dict_order[attacker]['attack'][i]
-        # change order into list [shooter_name,rest]
+            print(attack)
+        # change order into list [shooter_name,attack_stats]
             attackList = attack.split(':*')
-        # separate rest into position and damage
+        # separate attack_stats into position and damage
             spliting = attackList[1].split('=')
             shooter_name = attackList[0]
             damage = int(spliting[1])
             target_position = spliting[0]
         # separate position_target into target x et target y
             targetxy = target_position.split('-')
-        #put everything into one list [shooter_name,position_target,damage dealt]
-            #attackList = attackList [0]
-            #attackList.append(target_position)
-            #attackList.append(damage)
-        # separating target position
-            x_target = targetxy[0]
-            y_target = targetxy[1]
+        # separate target position
+            x_target = int(targetxy[0])
+            y_target = int(targetxy[1])
+
             target_units = []
             for unit in dict_board['@%s-%s'%(x_target,y_target)][target]:
                 target_units.append(unit)
 
             #search shooter position
             for key,value in dict_board.items():
-                    case = key
-                    case.split('-')
-                    case_0 = case[0].strip('@')
-                    x_shooter = case_0
-                    y_shooter = case[1]
+                if attacker in value:
+                    unit = value['francois']
+                    if attackList[0] in unit:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_shooter = int(case_0)
+                        y_shooter = int(case[1])
         #changing unit stat if attack succesful
-            #if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True and dict_army[attacker][shooter_name]['current_energy'] >= 10*damage:
-            dict_army[attacker][shooter_name]['current_energy'] -= 10*damage
-            for i in target_units:
-                dict_army[target][i]['hp'] -= damage
+            if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True and dict_army[attacker][shooter_name]['current_energy'] >= 10*damage:
+                dict_army[attacker][shooter_name]['current_energy'] -= 10*damage
+                for i in target_units:
+                    dict_army[target][i]['hp'] -= damage
     return dict_board, dict_army
 def move(dict_order,dict_board,dict_army,players):
     """execute move order of each player and modify board and stats of moving units
@@ -304,8 +309,8 @@ def move(dict_order,dict_board,dict_army,players):
     implementation: François Bechet (v.1 25/02/20)
     """
     # extract the move order from dict_order and change the position unit in dict_board
-    moveList = ''
     for player in players:
+        moveList = []
         # extract the move order
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
@@ -314,7 +319,7 @@ def move(dict_order,dict_board,dict_army,players):
 
         # move the unit position in dict_board
         for i in dict_board:
-            if moveList != '':
+            if moveList != []:
                 #store the case position
                 case = moveList[1]
                 # change the position of the unit in dict_board
@@ -326,7 +331,11 @@ def move(dict_order,dict_board,dict_army,players):
                         tempDict[player][moveList[0]].update(unit)
                         dict_board[case].update(tempDict)
 
-    # TODO : make the cruiser pay  the move
+        # make the cruiser pay  the move
+        if moveList != []:
+            if dict_army[player][moveList[0]]['ship_type'] == 'cruiser':
+                move_cost = dict_army[player][moveList[0]]['move_cost']
+                dict_army[player][moveList[0]]['current_energy']-=move_cost
     return dict_board
 
 def upgrade(dict_order,dict_army,dict_recruit,players):
@@ -563,6 +572,12 @@ def compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target):
     -------
     specification: François Bechet (v.1 24/02/20)
     """
+    # formula : max( |r2−r1| , |c2−c1| )
+    x = abs(x_shooter-x_target)
+    y = abs(y_shooter-y_target)
+    if max(x,y) <= 1:
+        return True
+
 def play_turn(dict_board,dict_army,dict_recruit,width,height,players):
     """ manage each turn of the game by receiving the commands of each player
 
