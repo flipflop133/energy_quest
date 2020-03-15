@@ -315,14 +315,15 @@ def move(dict_order,dict_board,dict_army,players):
         for i in range(len(dict_order[player]['move'])):
             move = dict_order[player]['move'][i]
             moveList = move.split(':')
-            moveList.append(player)
 
-        # check manhattan distance
-        x_shooter = 0
-        y_shooter = 0
-        x_target = 0
-        y_target = 0
         if moveList != []:
+            # check manhattan distance
+            x_shooter = 0
+            y_shooter = 0
+            xy_shooter = ''
+            x_target = 0
+            y_target = 0
+            
             # destination correspond to target
             print(moveList)
             case = moveList[1].split('-')
@@ -334,16 +335,16 @@ def move(dict_order,dict_board,dict_army,players):
                 if player in value:
                     unit = value[player]
                     if moveList[0] in unit:
+                        xy_shooter = key # store unit position to delete it after the move
                         case = key.split('-')
                         case_0 = case[0].strip('@')
                         x_shooter = int(case_0)
                         y_shooter = int(case[1])
-        if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True:          
+            if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True:
             # move the unit position in dict_board
-            for i in dict_board:
-                if moveList != []:
-                    #store the case position
-                    case = moveList[1]
+                #store the case position
+                case = moveList[1]
+                for i in dict_board:
                     # change the position of the unit in dict_board
                     if player in dict_board[i]:
                         tempBoard = dict_board[i][player]
@@ -352,12 +353,20 @@ def move(dict_order,dict_board,dict_army,players):
                             tempDict = {player:{moveList[0]:{}}}
                             tempDict[player][moveList[0]].update(unit)
                             dict_board[case].update(tempDict)
-
-            # make the cruiser pay  the move
-            if moveList != []:
+                            print(xy_shooter)
+                # delete the old unit position
+                # if there is only one unit delete the player key
+                if len(dict_board[xy_shooter][player]) == 1:
+                    del dict_board[xy_shooter][player]
+                # else delete only the unit key
+                else:
+                    del dict_board[xy_shooter][player][moveList[0]] 
+                        
+                # make the cruiser pay  the move
                 if dict_army[player][moveList[0]]['ship_type'] == 'cruiser':
                     move_cost = dict_army[player][moveList[0]]['move_cost']
                     dict_army[player][moveList[0]]['current_energy']-=move_cost
+    print(dict_board)
     return dict_board
 
 def upgrade(dict_order,dict_army,dict_recruit,players):
