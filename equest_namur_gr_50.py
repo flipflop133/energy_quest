@@ -329,11 +329,10 @@ def move(dict_order,dict_board,dict_army,players):
             case_0 = case[0].strip('@')
             x_target = int(case_0)
             y_target = int(case[1])
-            print(x_target)
             # unit to move correspond to shooter
             for key,value in dict_board.items():
                 if player in value:
-                    unit = value['francois']
+                    unit = value[player]
                     if moveList[0] in unit:
                         case = key.split('-')
                         case_0 = case[0].strip('@')
