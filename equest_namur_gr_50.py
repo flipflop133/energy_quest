@@ -535,12 +535,11 @@ def regenerate(dict_army,players):
     implementation : Dominik Everaert (v.1 13/03/20)
     """
     for player in players:
-        regen = dict_army[player][hub][regeneration]
-        empty=dict_army[player][hub][energy_capacity]-dict_army[player][hub][current_energy]
+        regen = dict_army[player]['hub']['regeneration']
+        empty=dict_army[player]['hub']['energy_capacity']-dict_army[player]['hub']['current_energy']
         if empty < regen:
             regen = empty
-        dict_army[player][hub][current_energy] += regen
-
+        dict_army[player]['hub']['current_energy'] += regen
     return dict_army
 def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     """execute recruit order and add unit to the army
@@ -571,18 +570,30 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
         for i in range(len(dict_order[player]['recruit'])):
             unit = dict_order[player]['recruit'][i]
             unitList = unit.split(':')
-            # add the unit to dict_board
-            for case, value in dict_board.items():
-                current_string = value
-                unitDict = {unitList[0]:{'ship_type':unitList[1]}}
-                if player in current_string:
-                    dict_board[case][player].update(unitDict)
-            # add the unit to dict_army
-            if unitList[0] not in dict_army[player]: # verify that the unit is not already in dict_army
-                if 'cruiser' in unitList:
-                    dict_army[player][unitList[0]] = dict_recruit_copy[player]['cruiser']
-                elif 'tanker' in unitList:
-                    dict_army[player][unitList[0]] = dict_recruit_copy[player]['tanker']
+            buy = False
+            # check that the player hub has enough energy to buy the unit
+            if unitList[1] == 'cruiser':
+                if dict_army[player]['hub']['current_energy'] > dict_recruit_copy[player]['cruiser']['cost']:
+                    buy = True
+            elif unitList[1] == 'tanker':
+                if dict_army[player]['hub']['current_energy'] > dict_recruit_copy[player]['tanker']['cost']:
+                    buy = True
+
+            if buy:
+                # add the unit to dict_board
+                for case, value in dict_board.items():
+                    current_string = value
+                    unitDict = {unitList[0]:{'ship_type':unitList[1]}}
+                    if player in current_string:
+                        dict_board[case][player].update(unitDict)
+                # add the unit to dict_army and pay the unit price
+                if unitList[0] not in dict_army[player]: # verify that the unit is not already in dict_army
+                    if 'cruiser' in unitList:
+                        dict_army[player][unitList[0]] = dict_recruit_copy[player]['cruiser']
+                        dict_army[player]['hub']['current_energy']-=dict_recruit_copy[player]['cruiser']['cost']
+                    elif 'tanker' in unitList:
+                        dict_army[player][unitList[0]] = dict_recruit_copy[player]['tanker']
+                        dict_army[player]['hub']['current_energy']-=dict_recruit_copy[player]['tanker']['cost']
 
     return dict_army, dict_board
 
@@ -631,7 +642,7 @@ def play_turn(dict_board,dict_army,dict_recruit,width,height,players):
     attack(dict_order,dict_army,dict_board,players)
     move(dict_order,dict_board,dict_army,players)
     energy_transfert(dict_army,dict_order,dict_board,players)
-    # regenerate
+    regenerate(dict_army,players)
     display_board(dict_board,height,width,players,dict_army)
 
 game(True)
