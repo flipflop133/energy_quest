@@ -73,6 +73,7 @@ def display_board(dict_board, height, width, players, dict_army):
                 print(property, ':', value, end=' ▍')
             print('')
         print('\n' * 2)
+    print(dict_board)
 
 
 def game(play_game):
@@ -291,23 +292,41 @@ def attack(dict_order, dict_army, dict_board, players):
         # separate position_target into target x et target y
             targetxy = target_position.split('-')
         # separate target position
+            x_target = int(targetxy[0])
+            y_target = int(targetxy[1])
+
             target_units = []
-            for unit in dict_board['@%s-%s' % (int(targetxy[0]), int(targetxy[1]))][target]:
+            for unit in dict_board['@%s-%s' % (x_target, y_target)][target]:
                 target_units.append(unit)
 
-            # search shooter position
+        # search shooter position
             for key, value in dict_board.items():
                 if attacker in value:
-                    unit = value['francois']
+                    unit = value[attacker]
                     if attackList[0] in unit:
                         case = key.split('-')
                         case_0 = case[0].strip('@')
                         x_shooter, y_shooter = int(case_0), int(case[1])
-        # changing unit stat if attack succesful
+        # execute the attack
+            # check manhattan distance and check that that the unit has enough energy to attack
             if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target) and dict_army[attacker][shooter_name]['current_energy'] >= 10 * damage:
                 dict_army[attacker][shooter_name]['current_energy'] -= 10 * damage
                 for i in target_units:
-                    dict_army[target][i]['hp'] -= damage
+                    # delete the unit if damage is >= unit hp
+                    if damage >= dict_army[target][i]['hp']:
+                        # if the unit is the hub the attacker win
+                        if i == 'hub':
+                            return('win')
+                        del dict_army[target][i]
+                        # if there is only one unit delete the player key
+                        if len(dict_board['@%s-%s' % (x_target, y_target)][target]) == 1:
+                            del dict_board['@%s-%s' % (x_target, y_target)][target]
+                        # else delete only the unit key
+                        else:
+                            del dict_board['@%s-%s' % (x_target, y_target)][target][i]
+                    # change the unit hp : hp = hp - damage
+                    else:
+                        dict_army[target][i]['hp'] -= damage
         # if it's a cruiser disable his move ability for the turn
             if dict_army[attacker][attackList[0]]['ship_type'] == 'cruiser':
                 dict_army[attacker][attackList[0]]['turn_attack'] = True
@@ -679,12 +698,16 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players):
     # call all functions to execute the player's orders
     recruit_units(dict_order, dict_army, players, dict_board, dict_recruit)
     upgrade(dict_order, dict_army, dict_recruit, players)
-    attack(dict_order, dict_army, dict_board, players)
-    move(dict_order, dict_board, dict_army, players)
-    energy_transfert(dict_army, dict_order, dict_board, players)
-    regenerate(dict_army, players)
-    display_board(dict_board, height, width, players, dict_army)
-    # check if one of the hubs is destroyed
+    # check if the hub is destroyed
+    # if the hub is destroyed stop the game
+    if attack(dict_order, dict_army, dict_board, players) == 'win':
+        game(False)
+    # else continue the game
+    else:
+        move(dict_order, dict_board, dict_army, players)
+        energy_transfert(dict_army, dict_order, dict_board, players)
+        regenerate(dict_army, players)
+        display_board(dict_board, height, width, players, dict_army)
 
 
 game(True)
