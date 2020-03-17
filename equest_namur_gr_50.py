@@ -81,7 +81,7 @@ def game(play_game):
     players = (player1,player2)
 
     # create dict_recruit
-    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+    dict_recruit = {player1:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750, 'turn_attack':False},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400 ,'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},player2:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200,'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750, 'turn_attack':False},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # call the create_board function and store its return values
     board_values = create_board("board.txt",players)
@@ -288,6 +288,9 @@ def attack(dict_order,dict_army,dict_board,players):
                 dict_army[attacker][shooter_name]['current_energy'] -= 10*damage
                 for i in target_units:
                     dict_army[target][i]['hp'] -= damage
+        # if it's a cruiser disable his move ability for the turn
+            if dict_army[attacker][attackList[0]]['ship_type'] == 'cruiser':
+                dict_army[attacker][attackList[0]]['turn_attack'] = True
     return dict_board, dict_army
 def move(dict_order,dict_board,dict_army,players):
     """execute move order of each player and modify board and stats of moving units
@@ -323,9 +326,9 @@ def move(dict_order,dict_board,dict_army,players):
             xy_shooter = ''
             x_target = 0
             y_target = 0
+            moveLegality = True
             
             # destination correspond to target
-            print(moveList)
             case = moveList[1].split('-')
             case_0 = case[0].strip('@')
             x_target = int(case_0)
@@ -340,7 +343,13 @@ def move(dict_order,dict_board,dict_army,players):
                         case_0 = case[0].strip('@')
                         x_shooter = int(case_0)
                         y_shooter = int(case[1])
-            if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True:
+            # verify that the cruiser didn't already attack this turn
+            if dict_army[player][moveList[0]]['ship_type'] == 'cruiser' :
+                if dict_army[player][moveList[0]]['turn_attack'] == True:
+                    moveLegality = False
+            # check manhattan distance and moveLegality
+            #if compute_manhattan_distance(x_shooter,y_shooter,x_target,y_target) == True and 
+            if moveLegality:
             # move the unit position in dict_board
                 #store the case position
                 case = moveList[1]
@@ -366,7 +375,12 @@ def move(dict_order,dict_board,dict_army,players):
                 if dict_army[player][moveList[0]]['ship_type'] == 'cruiser':
                     move_cost = dict_army[player][moveList[0]]['move_cost']
                     dict_army[player][moveList[0]]['current_energy']-=move_cost
-    print(dict_board)
+        # restore cruiser move legality
+        for unit, value in dict_army[player].items():
+            for property in dict_army[player][unit]:
+                if property == 'turn_attack':
+                    dict_army[player][unit][property] = False
+
     return dict_board
 
 def upgrade(dict_order,dict_army,dict_recruit,players):
@@ -562,7 +576,7 @@ def recruit_units(dict_order,dict_army,players,dict_board,dict_recruit):
     """
 
     # create a copy of dict_recruit because otherwise it would point to the same object and cause issues later
-    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
+    dict_recruit_copy = {players[0]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750, 'turn_attack':False},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}},players[1]:{'cruiser':{'ship_type':'cruiser','hp':100,'current_energy':200, 'energy_capacity':400, 'shooting_range':1,'move_cost':10,'shooting_cost':10 ,'cost':750, 'turn_attack':False},'tanker':{'ship_type':'tanker','hp':50,'current_energy':400, 'energy_capacity':600,'move_cost':0, 'cost':1000},'research':{'regeneration':0,'storage':0,'range':0,'move':0}}}
 
     # extract the units from dict_order and place them into dict_board and dict_army
     for player in players:
