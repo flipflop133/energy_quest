@@ -73,7 +73,6 @@ def display_board(dict_board, height, width, players, dict_army):
                 print(property, ':', value, end=' ▍')
             print('')
         print('\n' * 2)
-    print(dict_board)
 
 
 def game(play_game):
@@ -344,11 +343,8 @@ def attack(dict_order, dict_army, dict_board, players, peace):
                                 # else delete only the unit key
                             else:
                                 del dict_board[case][player][ship]
-    print("total damage:")
-    print(total_damage)
     if total_damage == 0:
         peace += 1
-    print(peace)
     return dict_board, dict_army, peace
 
 
@@ -416,7 +412,6 @@ def move(dict_order, dict_board, dict_army, players):
                             tempDict = {player: {moveList[0]: {}}}
                             tempDict[player][moveList[0]].update(unit)
                             dict_board[case].update(tempDict)
-                            print(xy_shooter)
                 # delete the old unit position
                 # if there is only one unit delete the player key
                 if len(dict_board[xy_shooter][player]) == 1:
@@ -482,7 +477,6 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                     for i in range(len(temp_dict)):
                         if dict_army[player][temp_dict[i]]['ship_type'] == 'tanker':
                             dict_army[player][temp_dict[i]]['energy_capacity'] += 100
-                            print('1 time')
                 else:
                     print("you can't upgrade energy capacity")
 
@@ -715,9 +709,6 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     specification: François Bechet (v.2 24/02/20)
     implementation: François Bechet (v.1 13/03/20)
     """
-
-    print('peace play turn')
-    print(peace)
     # get players orders
     dict_order = get_order(players)
     # call all functions to execute the player's orders
@@ -727,17 +718,17 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     # if the hub is destroyed stop the game
     win_condition = attack(dict_order, dict_army, dict_board, players, peace)
     if win_condition[0] == 'win':
-        game(False)
         print('the winner is %s' % win_condition[1])
-    print('win_condition')
-    print(win_condition[2])
+        game(False)
     if win_condition[2] == 40:
+        print("There was no attack during 40 turns so the game ended.")
         game(False)
     move(dict_order, dict_board, dict_army, players)
     energy_transfert(dict_army, dict_order, dict_board, players)
     regenerate(dict_army, players)
     display_board(dict_board, height, width, players, dict_army)
-    return peace
+    return win_condition[2]
 
 
+# Start the game
 game(True)
