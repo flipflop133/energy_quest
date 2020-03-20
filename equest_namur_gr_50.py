@@ -142,7 +142,7 @@ def game(play_game):
 
     # start the main game loop
     while play_game is not False:
-        play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
+        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
 
 
 def get_order(players):
@@ -737,6 +737,7 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     energy_transfert(dict_army, dict_order, dict_board, players)
     regenerate(dict_army, players)
     display_board(dict_board, height, width, players, dict_army)
+    return peace
 
 
 game(True)
