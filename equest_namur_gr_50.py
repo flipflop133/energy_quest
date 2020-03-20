@@ -137,7 +137,7 @@ def game(play_game):
     # call the display_board function
     display_board(dict_board, height, width, players, dict_army)
 
-    #initialise peace
+    # initialize peace
     peace = 0
 
     # start the main game loop
@@ -252,7 +252,7 @@ def create_board(board_file, players):
     return dict_board, height, width, dict_army
 
 
-def attack(dict_order, dict_army, dict_board, players,peace):
+def attack(dict_order, dict_army, dict_board, players, peace):
     """execute attack order of each player and modify stats of each effected unit
 
     parameters
@@ -333,7 +333,7 @@ def attack(dict_order, dict_army, dict_board, players,peace):
                         winner = players[1]
                     else:
                         winner = players[0]
-                    return(winner)
+                    return('win', winner)
                 else:
                     del dict_army[player][ship]
                     # if there is only one unit delete the player key
@@ -344,8 +344,11 @@ def attack(dict_order, dict_army, dict_board, players,peace):
                                 # else delete only the unit key
                             else:
                                 del dict_board[case][player][ship]
-    if total_damage == 0 :
-    peace += 1
+    print("total damage:")
+    print(total_damage)
+    if total_damage == 0:
+        peace += 1
+    print(peace)
     return dict_board, dict_army, peace
 
 
@@ -713,6 +716,8 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     implementation: François Bechet (v.1 13/03/20)
     """
 
+    print('peace play turn')
+    print(peace)
     # get players orders
     dict_order = get_order(players)
     # call all functions to execute the player's orders
@@ -720,17 +725,18 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     upgrade(dict_order, dict_army, dict_recruit, players)
     # check if the hub is destroyed
     # if the hub is destroyed stop the game
-    if type(attack(dict_order, dict_army, dict_board, players, peace)) == type(''):
+    win_condition = attack(dict_order, dict_army, dict_board, players, peace)
+    if win_condition[0] == 'win':
         game(False)
-        print('the winner is %s' % winner)
-    if peace == 40:
+        print('the winner is %s' % win_condition[1])
+    print('win_condition')
+    print(win_condition[2])
+    if win_condition[2] == 40:
         game(False)
-    # else continue the game
-    else:
-        move(dict_order, dict_board, dict_army, players)
-        energy_transfert(dict_army, dict_order, dict_board, players)
-        regenerate(dict_army, players)
-        display_board(dict_board, height, width, players, dict_army)
+    move(dict_order, dict_board, dict_army, players)
+    energy_transfert(dict_army, dict_order, dict_board, players)
+    regenerate(dict_army, players)
+    display_board(dict_board, height, width, players, dict_army)
 
 
 game(True)
