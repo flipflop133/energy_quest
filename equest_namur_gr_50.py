@@ -137,9 +137,12 @@ def game(play_game):
     # call the display_board function
     display_board(dict_board, height, width, players, dict_army)
 
+    #initialise peace
+    peace = 0
+
     # start the main game loop
     while play_game is not False:
-        play_turn(dict_board, dict_army, dict_recruit, width, height, players)
+        play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
 
 
 def get_order(players):
@@ -249,7 +252,7 @@ def create_board(board_file, players):
     return dict_board, height, width, dict_army
 
 
-def attack(dict_order, dict_army, dict_board, players):
+def attack(dict_order, dict_army, dict_board, players,peace):
     """execute attack order of each player and modify stats of each effected unit
 
     parameters
@@ -257,20 +260,22 @@ def attack(dict_order, dict_army, dict_board, players):
     dict_order[attack]: dictionnary of attack order(dict)
     dict_army: dictionnary with the unit of the two player(dict)
     players: names of the players(tuple)
+    peace : number of turn wihout damage (int)
 
     return
     ------
     dict_army: dictionnary of the 2 army modified in result of the attack(dict)
-
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    peace : number of turn wihout damage (int)
     Version
     −−−−−−−
-    specification: Dominik Everaert (v.3 24/02/20)
-    implementation : Dominik Everaert (v.1 11/03/20)
+    specification: Dominik Everaert (v.4 24/02/20)
+    implementation : Dominik Everaert (v.2 11/03/20)
     """
     # extract the attack order from dict_order and change unit stat
+    total_damage = 0
     attackList = ''
     x_shooter, y_shooter, x_target, y_target = '', '', '', ''
-
     for player in players:
         if player == players[0]:
             attacker = players[0]
@@ -281,7 +286,6 @@ def attack(dict_order, dict_army, dict_board, players):
         # extract the attack order
         for i in range(len(dict_order[attacker]['attack'])):
             attack = dict_order[attacker]['attack'][i]
-            print(attack)
         # change order into list [shooter_name,attack_stats]
             attackList = attack.split(':*')
         # separate attack_stats into position and damage
@@ -312,25 +316,37 @@ def attack(dict_order, dict_army, dict_board, players):
             if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target) and dict_army[attacker][shooter_name]['current_energy'] >= 10 * damage:
                 dict_army[attacker][shooter_name]['current_energy'] -= 10 * damage
                 for i in target_units:
-                    # delete the unit if damage is >= unit hp
-                    if damage >= dict_army[target][i]['hp']:
-                        # if the unit is the hub the attacker win
-                        if i == 'hub':
-                            return('win')
-                        del dict_army[target][i]
-                        # if there is only one unit delete the player key
-                        if len(dict_board['@%s-%s' % (x_target, y_target)][target]) == 1:
-                            del dict_board['@%s-%s' % (x_target, y_target)][target]
-                        # else delete only the unit key
-                        else:
-                            del dict_board['@%s-%s' % (x_target, y_target)][target][i]
                     # change the unit hp : hp = hp - damage
-                    else:
-                        dict_army[target][i]['hp'] -= damage
+                    dict_army[target][i]['hp'] -= damage
+                    total_damage += damage
         # if it's a cruiser disable his move ability for the turn
             if dict_army[attacker][attackList[0]]['ship_type'] == 'cruiser':
                 dict_army[attacker][attackList[0]]['turn_attack'] = True
-    return dict_board, dict_army
+
+        # delete the unit if damage is >= unit hp
+
+        for ship in dict_army[player]:
+            if dict_army[player][ship]['hp'] <= 0:
+                # if the unit is the hub the attacker win
+                if ship == 'hub':
+                    if player == players[0]:
+                        winner = players[1]
+                    else:
+                        winner = players[0]
+                    return(winner)
+                else:
+                    del dict_army[player][ship]
+                    # if there is only one unit delete the player key
+                    for case, value in dict_board.items():
+                        if ship in dict_board[case][player]:
+                            if len(dict_board[case][player]) == 1:
+                                del dict_board[case][player]
+                                # else delete only the unit key
+                            else:
+                                del dict_board[case][player][ship]
+    if total_damage == 0 :
+    peace += 1
+    return dict_board, dict_army, peace
 
 
 def move(dict_order, dict_board, dict_army, players):
@@ -512,6 +528,7 @@ def energy_transfert(dict_army, dict_order, dict_board, players):
     Version
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
+    implementation : François Bechet (v.1 10/03/20)
     """
     for player in players:
         order_peak = []
@@ -669,6 +686,7 @@ def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
     Version
     -------
     specification: François Bechet (v.1 24/02/20)
+    implementation: François Bechet (v.1 12/03/20)
     """
     # formula : max( |r2−r1| , |c2−c1| )
     x = abs(x_shooter - x_target)
@@ -677,7 +695,7 @@ def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
         return True
 
 
-def play_turn(dict_board, dict_army, dict_recruit, width, height, players):
+def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace):
     """ manage each turn of the game by receiving the commands of each player
 
     Parameters
@@ -687,10 +705,12 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players):
     dict_board: dictionnary with all the characteristic of the board (dict)
     dict_recruit: dictionnary with research and stat of new ship(dict)
     players: names of the players(tuple)
+    peace : number of turn wihout damage (int)
 
     Version
     -------
     specification: François Bechet (v.2 24/02/20)
+    implementation: François Bechet (v.1 13/03/20)
     """
 
     # get players orders
@@ -700,7 +720,10 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players):
     upgrade(dict_order, dict_army, dict_recruit, players)
     # check if the hub is destroyed
     # if the hub is destroyed stop the game
-    if attack(dict_order, dict_army, dict_board, players) == 'win':
+    if type(attack(dict_order, dict_army, dict_board, players, peace)) == type(''):
+        game(False)
+        print('the winner is %s' % winner)
+    if peace == 40:
         game(False)
     # else continue the game
     else:
