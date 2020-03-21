@@ -141,8 +141,10 @@ def game(play_game):
 
     # start the main game loop
     while play_game is not False:
-        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
-
+        try:
+            peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
+        except Exception:
+            print("One of the players entered a bad order")
 
 def get_order(players):
     """ask the player for orders
