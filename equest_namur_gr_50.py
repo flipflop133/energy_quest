@@ -2,6 +2,7 @@
 import copy
 import math
 import colored
+import random
 
 
 def display_board(dict_board, height, width, players, dict_army):
@@ -146,7 +147,8 @@ def game(play_game):
         except Exception:
             print("One of the players entered a bad order")
 
-def get_order(players):
+
+def get_order(players, dict_army, dict_board):
     """ask the player for orders
 
     Orders must respect this syntax :
@@ -175,8 +177,12 @@ def get_order(players):
                   players[1]: {'move': [], 'attack': [], 'upgrade': [], 'recruit': [], 'transfer': []}}
 
     # ask orders to players and add them to dict_order
+    print(dict_army)
     for player in players:
-        list_order_player = (input("%s, please enter your orders : " % player)).split()
+        if player != 'ai':
+            list_order_player = (input("%s, please enter your orders : " % player)).split()
+        else:
+            list_order_player = ai(dict_army, dict_board, players)
         for i in range(len(list_order_player)):
             if '@' in list_order_player[i]:
                 dict_order[player]['move'].append(list_order_player[i])
@@ -190,6 +196,7 @@ def get_order(players):
                 dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
+    print(dict_order)
     return dict_order
 
 
@@ -640,30 +647,32 @@ def recruit_units(dict_order, dict_army, players, dict_board, dict_recruit):
         for i in range(len(dict_order[player]['recruit'])):
             unit = dict_order[player]['recruit'][i]
             unitList = unit.split(':')
-            buy = False
-            # check that the player hub has enough energy to buy the unit
-            if unitList[1] == 'cruiser':
-                if dict_army[player]['hub']['current_energy'] > dict_recruit_copy[player]['cruiser']['cost']:
-                    buy = True
-            elif unitList[1] == 'tanker':
-                if dict_army[player]['hub']['current_energy'] > dict_recruit_copy[player]['tanker']['cost']:
-                    buy = True
+            # check that the unit name doesn't already exists
+            if unitList[0] not in dict_army[player]:
+                buy = False
+                # check that the player hub has enough energy to buy the unit
+                if unitList[1] == 'cruiser':
+                    if dict_army[player]['hub']['current_energy'] > dict_recruit_copy[player]['cruiser']['cost']:
+                        buy = True
+                elif unitList[1] == 'tanker':
+                    if dict_army[player]['hub']['current_energy'] > dict_recruit_copy[player]['tanker']['cost']:
+                        buy = True
 
-            if buy:
-                # add the unit to dict_board
-                for case, value in dict_board.items():
-                    current_string = value
-                    unitDict = {unitList[0]: {'ship_type': unitList[1]}}
-                    if player in current_string:
-                        dict_board[case][player].update(unitDict)
-                # add the unit to dict_army and pay the unit price
-                if unitList[0] not in dict_army[player]:  # verify that the unit is not already in dict_army
-                    if 'cruiser' in unitList:
-                        dict_army[player][unitList[0]] = dict_recruit_copy[player]['cruiser']
-                        dict_army[player]['hub']['current_energy'] -= dict_recruit_copy[player]['cruiser']['cost']
-                    elif 'tanker' in unitList:
-                        dict_army[player][unitList[0]] = dict_recruit_copy[player]['tanker']
-                        dict_army[player]['hub']['current_energy'] -= dict_recruit_copy[player]['tanker']['cost']
+                if buy:
+                    # add the unit to dict_board
+                    for case, value in dict_board.items():
+                        current_string = value
+                        unitDict = {unitList[0]: {'ship_type': unitList[1]}}
+                        if player in current_string:
+                            dict_board[case][player].update(unitDict)
+                    # add the unit to dict_army and pay the unit price
+                    if unitList[0] not in dict_army[player]:  # verify that the unit is not already in dict_army
+                        if 'cruiser' in unitList:
+                            dict_army[player][unitList[0]] = dict_recruit_copy[player]['cruiser']
+                            dict_army[player]['hub']['current_energy'] -= dict_recruit_copy[player]['cruiser']['cost']
+                        elif 'tanker' in unitList:
+                            dict_army[player][unitList[0]] = dict_recruit_copy[player]['tanker']
+                            dict_army[player]['hub']['current_energy'] -= dict_recruit_copy[player]['tanker']['cost']
 
     return dict_army, dict_board
 
@@ -712,7 +721,7 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     implementation: François Bechet (v.1 13/03/20)
     """
     # get players orders
-    dict_order = get_order(players)
+    dict_order = get_order(players, dict_army, dict_board)
     # call all functions to execute the player's orders
     recruit_units(dict_order, dict_army, players, dict_board, dict_recruit)
     upgrade(dict_order, dict_army, dict_recruit, players)
@@ -730,6 +739,78 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     regenerate(dict_army, players)
     display_board(dict_board, height, width, players, dict_army)
     return win_condition[2]
+
+
+def ai(dict_army, dict_board, players):
+    # find enemy
+    if players[0]=='ia':
+        enemy = players[1]
+    else:
+        enemy = players[0]
+
+    ai_orders = []
+    # recruit unit
+    unit_list = ['Alfa', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu']
+    unit_name = unit_list[random.randint(0, (len(unit_list)) - 1)]
+    unit_type_list = ['tanker', 'cruiser']
+    unit_type = unit_type_list[random.randint(0, (len(unit_type_list)) - 1)]
+    recruit_order = "%s:%s" % (unit_name, unit_type)
+    ai_orders.append(recruit_order)
+
+    # move
+    list_unit = []
+    for unit in dict_army['ai']:
+        if unit != 'hub':
+            list_unit.append(unit)
+    enemy_hub_case = []
+    # find the enemy hub case
+    for unit in list_unit:
+        for case, properties in dict_board.items():
+            if enemy in properties:
+                for unit in dict_board[case][enemy]:
+                    if unit == 'hub':
+                        enemy_hub_case = case.split('-')
+                        case_x = enemy_hub_case[0].strip('@')
+                        case_y = enemy_hub_case[1]
+                        enemy_hub_case = [case_x, case_y]
+    # move the unit to it's target
+    print(list_unit)
+    print(dict_board)
+    for case, properties in dict_board.items():
+        if 'ai' in properties:
+            for unit in dict_board[case]['ai']:
+                if unit != 'hub':
+                    # save unit case
+                    unit_case = case.split('-')
+                    case_y = unit_case[1]
+                    case_x = unit_case[0].strip('@')
+                    unit_case = [case_x, case_y]
+                    # find the case to move to
+                    # case_x
+                    if enemy_hub_case[0] > unit_case[0]:
+                        case_x = int(unit_case[0]) - 1
+                    elif enemy_hub_case[0] < unit_case[0]:
+                        case_x = int(unit_case[0]) + 1
+                    else:
+                        case_x = enemy_hub_case[0]
+                    # case_y
+                    if enemy_hub_case[1] > unit_case[1]:
+                        case_y = int(unit_case[1]) - 1
+                    elif enemy_hub_case[1] < unit_case[0]:
+                        case_y = int(unit_case[1]) + 1
+                    else:
+                        case_y = enemy_hub_case[1]
+                    move_order = '%s:@%s-%s' % (unit, case_x, case_y)
+                    ai_orders.append(move_order)
+
+
+    # attack
+    # upgrade            
+
+    # ai_orders.append(move_order)
+    # return all the orders
+    print(ai_orders)
+    return(ai_orders)
 
 
 # Start the game
