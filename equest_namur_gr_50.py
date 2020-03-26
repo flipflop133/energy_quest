@@ -355,6 +355,7 @@ def attack(dict_order, dict_army, dict_board, players, peace):
     # extract the attack order from dict_order and change unit stat
     total_damage = 0
     attackList = ''
+    shooting_range = 0
     x_shooter, y_shooter, x_target, y_target = '', '', '', ''
     for player in players:
         if player == players[0]:
@@ -382,6 +383,9 @@ def attack(dict_order, dict_army, dict_board, players, peace):
             target_units = []
             for unit in dict_board['@%s-%s' % (x_target, y_target)][target]:
                 target_units.append(unit)
+       
+        # search shooter range
+        shooting_range = dict_army[player][shooter_name]['shooting_range']
 
         # search shooter position
             for key, value in dict_board.items():
@@ -393,7 +397,7 @@ def attack(dict_order, dict_army, dict_board, players, peace):
                         x_shooter, y_shooter = int(case_0), int(case[1])
         # execute the attack
             # check manhattan distance and check that that the unit has enough energy to attack
-            if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target) and dict_army[attacker][shooter_name]['current_energy'] >= 10 * damage:
+            if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target,shooting_range) and dict_army[attacker][shooter_name]['current_energy'] >= 10 * damage:
                 dict_army[attacker][shooter_name]['current_energy'] -= 10 * damage
                 for i in target_units:
                     # change the unit hp : hp = hp - damage
@@ -763,7 +767,7 @@ def recruit_units(dict_order, dict_army, players, dict_board, dict_recruit):
     return dict_army, dict_board
 
 
-def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target,shooting_range):
     """compute the distance between a cruiser and its target
 
     Parameters
@@ -785,7 +789,7 @@ def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
     # formula : max( |r2−r1| , |c2−c1| )
     x = abs(x_shooter - x_target)
     y = abs(y_shooter - y_target)
-    if max(x, y) <= 1:
+    if max(x, y) <= shooting_range:
         return True
 
 
