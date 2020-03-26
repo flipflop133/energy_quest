@@ -767,7 +767,7 @@ def recruit_units(dict_order, dict_army, players, dict_board, dict_recruit):
     return dict_army, dict_board
 
 
-def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target,shooting_range):
+def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target,shooting_range=1):
     """compute the distance between a cruiser and its target
 
     Parameters
