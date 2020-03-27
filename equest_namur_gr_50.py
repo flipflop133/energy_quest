@@ -736,25 +736,22 @@ def energy_transfert(dict_army, dict_order, dict_board, players):
         # execute energy transfert
         if order != []:
             # check manhattan distance
-            # get target(receiver) position
-            # hub
-            if peak:
-                xy_target = order[1].split('-')
-                x_target, y_target = int(xy_target[0]), int(xy_target[1])
-            else:
+            # get positions
+            for c_order in order:
                 for key, value in dict_board.items():
                     if player in value:
-                        if order[1] in value[player]:
+                        if c_order in value[player]:
                             case = key.split('-')
                             case_0 = case[0].strip('@')
-                            x_target, y_target = int(case_0), int(case[1])
-            # get shooter(giver) position
-            for key, value in dict_board.items():
-                if player in value:
-                    if order[0] in value[player]:
-                        case = key.split('-')
-                        case_0 = case[0].strip('@')
-                        x_shooter, y_shooter = int(case_0), int(case[1])
+                            if c_order == order[0]:
+                                x_shooter, y_shooter = int(case_0), int(case[1])
+                            else:
+                                if peak:
+                                    xy_target = c_order[1].split('-')
+                                    x_target, y_target = int(xy_target[0]), int(xy_target[1])
+                                else:
+                                    x_target, y_target = int(case_0), int(case[1])
+
             if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
                 energy_unit = dict_army[player][order[0]]['energy_capacity'] - dict_army[player][order[0]]['current_energy']
                 # peak
