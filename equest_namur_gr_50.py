@@ -724,10 +724,7 @@ def energy_transfert(dict_army, dict_order, dict_board, players):
     implementation : François Bechet (v.1 10/03/20)
     """
     for player in players:
-        order_peak = []
-        order_unit = []
-        order_hub = []
-        tempList = []
+        order_peak, order_unit, order_hub, tempList = [], [], [], []
         # extract order from dict_order and place each kind of transfert order in a specific list
         tempList = dict_order[player]['transfer']
         for i in range(len(tempList)):
@@ -741,13 +738,26 @@ def energy_transfert(dict_army, dict_order, dict_board, players):
 
         # execute peak to unit transfert
         if order_peak != []:
-            energy_unit = dict_army[player][order_peak[0]]['energy_capacity'] - dict_army[player][order_peak[0]]['current_energy']
-            if energy_unit >= dict_board['@' + order_peak[1]]['peak']['energy']:
-                energy = dict_board['@' + order_peak[1]]['peak']['energy']
-            else:
-                energy = energy_unit
-            dict_board['@' + order_peak[1]]['peak']['energy'] -= energy
-            dict_army[player][order_peak[0]]['current_energy'] += energy
+            # verify manhattan distance
+            # peak is the target
+            xy_target = order_peak[1].split('-')
+            x_target, y_target = int(xy_target[0]), int(xy_target[1])
+            # miner is the shooter
+            for key, value in dict_board.items():
+                if player in value:
+                    if order_peak[0] in value[player]:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_shooter, y_shooter = int(case_0), int(case[1])
+            if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                energy_unit = dict_army[player][order_peak[0]]['energy_capacity'] - dict_army[player][order_peak[0]]['current_energy']
+                if energy_unit >= dict_board['@' + order_peak[1]]['peak']['energy']:
+                    energy = dict_board['@' + order_peak[1]]['peak']['energy']
+                else:
+                    energy = energy_unit
+                # do the energy transfert
+                dict_board['@' + order_peak[1]]['peak']['energy'] -= energy
+                dict_army[player][order_peak[0]]['current_energy'] += energy
 
             # if peak's energy reach 0, remove the peak
             if dict_board['@' + order_peak[1]]['peak']['energy'] == 0:
@@ -755,26 +765,54 @@ def energy_transfert(dict_army, dict_order, dict_board, players):
 
         # execute unit to unit transfert
         if order_unit != []:
-            energy_unit = dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy']
-            if energy_unit >= dict_army[player][order_unit[0]]['current_energy']:
-                energy = dict_army[player][order_unit[0]]['current_energy']
-            else:
-                energy = energy_unit
-            dict_army[player][order_unit[0]]['current_energy'] -= energy
-            dict_army[player][order_unit[1]]['current_energy'] += energy
+            # verify manhattan distance
+            # target
+            for key, value in dict_board.items():
+                if player in value:
+                    if order_unit[1] in value[player]:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_target, y_target = int(case_0), int(case[1])
+            # shooter
+            for key, value in dict_board.items():
+                if player in value:
+                    if order_unit[0] in value[player]:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_shooter, y_shooter = int(case_0), int(case[1])
+            if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                energy_unit = dict_army[player][order_unit[1]]['energy_capacity'] - dict_army[player][order_unit[1]]['current_energy']
+                if energy_unit >= dict_army[player][order_unit[0]]['current_energy']:
+                    energy = dict_army[player][order_unit[0]]['current_energy']
+                else:
+                    energy = energy_unit
+                # do the energy transfert
+                dict_army[player][order_unit[0]]['current_energy'] -= energy
+                dict_army[player][order_unit[1]]['current_energy'] += energy
 
         # execute unit to hub transfert
         if order_hub != []:
-            # the hub must not be full
-            energy_hub = dict_army[player][order_hub[1]]['energy_capacity'] - dict_army[player][order_hub[1]]['current_energy']
-            if energy_hub >= dict_army[player][order_hub[0]]['current_energy']:
-                energy = dict_army[player][order_hub[0]]['current_energy']
-            else:
-                energy = energy_hub
-
-            # do the energy transfert
-            dict_army[player][order_hub[0]]['current_energy'] -= energy
-            dict_army[player][order_hub[1]]['current_energy'] += energy
+            # verify manhattan distance
+            # hub is the target
+            xy_target = order_hub[1].split('-')
+            x_target, y_target = int(xy_target[0]), int(xy_target[1])
+            # unit is the shooter
+            for key, value in dict_board.items():
+                if player in value:
+                    if order_hub[0] in value[player]:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_shooter, y_shooter = int(case_0), int(case[1])
+            if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                # the hub must not be full
+                energy_hub = dict_army[player][order_hub[1]]['energy_capacity'] - dict_army[player][order_hub[1]]['current_energy']
+                if energy_hub >= dict_army[player][order_hub[0]]['current_energy']:
+                    energy = dict_army[player][order_hub[0]]['current_energy']
+                else:
+                    energy = energy_hub
+                # do the energy transfert
+                dict_army[player][order_hub[0]]['current_energy'] -= energy
+                dict_army[player][order_hub[1]]['current_energy'] += energy
 
     return dict_army, dict_board
 
