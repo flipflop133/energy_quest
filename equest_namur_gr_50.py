@@ -886,7 +886,8 @@ def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target, shootin
     y = abs(y_shooter - y_target)
     if max(x, y) <= shooting_range:
         return True
-
+    else :
+        return False
 
 def ai(dict_army, dict_board, players, player):
 
