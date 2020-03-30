@@ -170,10 +170,12 @@ def display_board(dict_board, height, width, players, dict_army):
     """
     # define colored colors
     default_color = colored.attr('reset')
-    green = colored.fg('#1b5e20')
+    green = colored.fg('#32cd32')
     red = colored.fg('#ff0000')
-    gold = colored.fg('#b08f26')
-    blue = colored.bg('#81d4fa')
+    gold = colored.fg('#fdd835')
+    blue = colored.bg('#006994')
+    white = colored.fg('#ffffff')
+    grey = colored.fg('#999999')
 
     # display game's header
     print("################")
@@ -220,15 +222,15 @@ def display_board(dict_board, height, width, players, dict_army):
                             armies[case].append(unit)
                 # display dice's faces
                 if len(armies[case]) == 2:
-                    print(blue + ' ⚁ ', end='')
+                    print(white + blue + ' ⚁ ', end='')
                 elif len(armies[case]) == 3:
-                    print(blue + ' ⚂ ', end='')
+                    print(white + blue + ' ⚂ ', end='')
                 elif len(armies[case]) == 4:
-                    print(blue + ' ⚃ ', end='')
+                    print(white + blue + ' ⚃ ', end='')
                 elif len(armies[case]) == 5:
-                    print(blue + ' ⚄ ', end='')
+                    print(white + blue + ' ⚄ ', end='')
                 else:
-                    print(blue + ' ⚅ ', end='')
+                    print(white + blue + ' ⚅ ', end='')
             # if there is only one unit on the case
             else:
                 # display player0 hub and units
@@ -258,7 +260,7 @@ def display_board(dict_board, height, width, players, dict_army):
                 # display peaks
                 elif 'peak' in dict_board['@%d-%d' % (x + 1, y + 1)]:
                     if len(dict_board['@%d-%d' % (x + 1, y + 1)]) == 1:
-                        print(gold + blue + ' ⛽' + default_color, end='')
+                        print(gold + blue + ' ☢ ' + default_color, end='')
                     else:
                         case = str(x + 1) + ':' + str(y + 1)
                         armies[case] = {}
@@ -275,7 +277,7 @@ def display_board(dict_board, height, width, players, dict_army):
                             print(colored.fg('#005500') + ' ⚅ ' + default_color, end='')
                 # display cases
                 else:
-                    print(blue + " . " + default_color, end='')
+                    print(grey + blue + " . " + default_color, end='')
         n = n + x
         print(' ' + str(n))
 
