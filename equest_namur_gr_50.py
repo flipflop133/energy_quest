@@ -608,7 +608,7 @@ def attack(dict_order, dict_army, dict_board, height, width, players, peace):
                 shooting_range = dict_army[player][shooter_name]['shooting_range']
 
             attackLegality = True
-            # check that the targeted case is in the board 1-20 and 1-10
+            # check that the targeted case is in the board 
             if x_target > width or x_target < 1 or y_target > height or y_target < 1:
                 attackLegality = False
             # check that there are units of the target on the targeted case
@@ -892,6 +892,23 @@ def compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target, shootin
         return False
 
 def ai(dict_army, dict_board, players, player):
+    """make the Ai play
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    players: names of the players(tuple)
+    TODO player
+
+    return
+    -----------
+    ai_orders : the order of the ai player (list)
+
+    specification: Dominik Everaert (v.1 4/03/20)
+    implementation: François Bechet (v.1 4/03/20)
+
+    """
 
     ai_orders = []
     # recruit unit
@@ -908,22 +925,11 @@ def ai(dict_army, dict_board, players, player):
         if player in properties:
             for unit in dict_board[case][player]:
                 if unit != 'hub':
-                    # save unit case
+                    # save unit case + move to a random case
                     unit_case = case.split('-')
-                    case_y = int(unit_case[1])
-                    case_x = int(unit_case[0].strip('@'))
-                    # find the case to move to
-                    # case_x
-                    x, y = random.randint(0, 1), random.randint(0, 1)
-                    if x == 0:
-                        case_x = case_x + random.randint(0, 1)
-                    else:
-                        case_x = case_x - random.randint(0, 1)
-                    # case_y
-                    if y == 0:
-                        case_y = case_y + random.randint(0, 1)
-                    else:
-                        case_y = case_y - random.randint(0, 1)
+                    case_y = int(unit_case[1]) + random.randint(-1, 1)
+                    case_x = int(unit_case[0].strip('@')) + random.randint(-1, 1)
+                   
 
                     move_order = '%s:@%s-%s' % (unit, case_x, case_y)
                     ai_orders.append(move_order)
@@ -932,30 +938,39 @@ def ai(dict_army, dict_board, players, player):
         if player in properties:
             for unit in dict_board[case][player]:
                 if unit != 'hub':
-                    # save unit case
+                    # save unit case+ attack a random case
                     unit_case = case.split('-')
-                    case_y = int(unit_case[1])
-                    case_x = int(unit_case[0].strip('@'))
-                    # find the case to attack
-                    # case_x
-                    x, y = random.randint(0, 1), random.randint(0, 1)
-                    if x == 0:
-                        case_x = case_x + random.randint(0, 1)
-                    else:
-                        case_x = case_x - random.randint(0, 1)
-                    # case_y
-                    if y == 0:
-                        case_y = case_y + random.randint(0, 1)
-                    else:
-                        case_y = case_y - random.randint(0, 1)
+                    case_y = int(unit_case[1]) + random.randint(-1, 1)
+                    case_x = int(unit_case[0].strip('@')) + random.randint(-1, 1)
 
                     # damage to deal (max correspond to current_energy/10)
-                    max_damage = dict_army[player][unit]['current_energy'] / 10
+                    max_damage = dict_army[player][unit]['current_energy'] // 10
                     damage = random.randint(0, int(max_damage))
                     attack_order = '%s:*%s-%s=%s' % (unit, case_x, case_y, damage)
                     ai_orders.append(attack_order)
 
     # energy transfert
+    for case, properties in dict_board.items():
+        if player in properties:
+            for unit in dict_board[case][player]['ship_type']:
+                if unit == 'tanker':
+                    # save unit case 
+                    unit_case = case.split('-')
+                    case_y = int(unit_case[1]) 
+                    case_x = int(unit_case[0].strip('@')) 
+                    # find a  unit that need energy
+                    units = []
+                    for client in dict_army[player]:
+                        units.append(dict_army[player][unit])
+                    needer = units[random.randint(0, (len(units))-1]
+                    
+                    transfer_order = '%s:>%s' % (unit,needer)
+                    ai_orders.append(transfer_order)
+                    
+                    
+                    
+                    
+                            
 
     # upgrade
     upgrade_list = ['regeneration', 'storage', 'range', 'move']
