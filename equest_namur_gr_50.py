@@ -8,7 +8,7 @@ import colored
 import remote_play
 
 
-def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
+def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1', colored_display=True):
     """start the game and play it
     paramater
     ---------
@@ -16,6 +16,7 @@ def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
     local_player : id of your group (int, optional)
     remote_id : id of the other group(int, optional)
     remote_ip : IP address where the referee or the other group is(str, optional)
+    colored_display : enable or display colors for the display(bool)
 
     Version
     −−−−−−−
@@ -78,7 +79,7 @@ def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
     dict_army = board_values[3]
 
     # call the display_board function
-    display_board(dict_board, height, width, players, dict_army)
+    display_board(dict_board, height, width, players, dict_army, colored_display)
 
     # initialize peace
     peace = 0
@@ -92,7 +93,7 @@ def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
             print("One of the players entered a bad order") """
     play_game = True
     while play_game:
-        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection)
+        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection, colored_display)
 
 
 def create_board(board_file, players):
@@ -155,7 +156,7 @@ def create_board(board_file, players):
     return dict_board, height, width, dict_army
 
 
-def display_board(dict_board, height, width, players, dict_army):
+def display_board(dict_board, height, width, players, dict_army, colored_display):
     """display the board at the beginning of the game
 
     parameters
@@ -164,6 +165,7 @@ def display_board(dict_board, height, width, players, dict_army):
     height:height of the board(int)
     width:width of the board(int)
     players:names of the players(tuple)
+    colored_display : enable or display colors for the display(bool)
 
     Version
     −−−−−−−
@@ -171,18 +173,29 @@ def display_board(dict_board, height, width, players, dict_army):
     implementation: François Bechet (v.1 01/03/20)
     """
     # define colored colors
-    default_color = colored.attr('reset')
-    green = colored.fg('#32cd32')
-    red = colored.fg('#ff0000')
-    gold = colored.fg('#fdd835')
-    blue = colored.bg('#006994')
-    white = colored.fg('#ffffff')
-    grey = colored.fg('#999999')
+    if colored_display:
+        default_color = colored.attr('reset')
+        green = colored.fg('#32cd32')
+        red = colored.fg('#ff0000')
+        gold = colored.fg('#fdd835')
+        blue = colored.bg('#006994')
+        white = colored.fg('#ffffff')
+        grey = colored.fg('#999999')
+        cyan = colored.fg('#8bf6ff')
+    else:
+        default_color = ''
+        green = ''
+        red = ''
+        gold = ''
+        blue = ''
+        white = ''
+        grey = ''
+        cyan = ''
 
     # display game's header
-    print("################")
+    print(cyan + "################")
     print("# ENERGY QUEST #")
-    print("################")
+    print("################" + default_color)
 
     # display the board
     print(' ', end='')
@@ -268,15 +281,15 @@ def display_board(dict_board, height, width, players, dict_army):
                         armies[case] = {}
                         armies[case].update(dict_board['@%d-%d' % (x + 1, y + 1)])
                         if len(tempDict) == 2:
-                            print(colored.fg('#009900') + ' ⚁ ' + default_color, end='')
+                            print(green + ' ⚁ ' + default_color, end='')
                         elif len(tempDict) == 3:
-                            print(colored.fg('#008800') + ' ⚂ ' + default_color, end='')
+                            print(green + ' ⚂ ' + default_color, end='')
                         elif len(tempDict) == 4:
-                            print(colored.fg('#007700') + ' ⚃ ' + default_color, end='')
+                            print(green + ' ⚃ ' + default_color, end='')
                         elif len(tempDict) == 5:
-                            print(colored.fg('#006600') + ' ⚄ ' + default_color, end='')
+                            print(green + ' ⚄ ' + default_color, end='')
                         else:
-                            print(colored.fg('#005500') + ' ⚅ ' + default_color, end='')
+                            print(green + ' ⚅ ' + default_color, end='')
                 # display cases
                 else:
                     print(grey + blue + " . " + default_color, end='')
@@ -292,10 +305,14 @@ def display_board(dict_board, height, width, players, dict_army):
                 print(unit)
     # display the energy peaks
     print(gold + '\nENERGY PEAKS' + default_color)
+    i = 0
     for case in dict_board:
         if 'peak' in dict_board[case]:
-            print(('peak%s') % (case))
-            print('energy :', dict_board[case]['peak']['energy'])
+            i += 1
+            print(('peak%s') % (case), end='')
+            print('energy :', dict_board[case]['peak']['energy'], end='  ')
+            if i % 5 == 0:  # go to the next line every 5 peaks
+                print('\n')
 
     # display the players units and hubs
     for player in players:
@@ -312,7 +329,7 @@ def display_board(dict_board, height, width, players, dict_army):
         print('\n')
 
 
-def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection):
+def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection, colored_display):
     """ manage each turn of the game by receiving the commands of each player
 
     Parameters
@@ -324,6 +341,7 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     players: names of the players(tuple)
     peace : number of turn wihout damage (int)
     connection : sockets to receive/send orders (dict of socket.socket)
+    colored_display : enable or display colors for the display(bool)
     Version
     -------
     specification: François Bechet (v.3 24/02/20)
@@ -348,7 +366,7 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     move(dict_order, dict_board, height, width, dict_army, players)
     energy_transfert(dict_army, dict_order, dict_board, height, width, players)
     regenerate(dict_army, players)
-    display_board(dict_board, height, width, players, dict_army)
+    display_board(dict_board, height, width, players, dict_army, colored_display)
     return win_condition[2]
 
 
@@ -377,86 +395,39 @@ def get_order(players, dict_army, dict_board, connection):
     implementation: François Bechet (v.2 01/03/20)
     """
 
-    # convert list_oder to dict_order
+    # create dict_order
     dict_order = {players[0]: {'move': [], 'attack': [], 'upgrade': [], 'recruit': [], 'transfer': []},
                   players[1]: {'move': [], 'attack': [], 'upgrade': [], 'recruit': [], 'transfer': []}}
 
-    # ask orders to players and add them to dict_order
-
-    if players[1] != 'ai' and players[0] != 'ai':
-        order_player = (input("%s, please enter your orders : " % players[0]))
-        remote_play.notify_remote_orders(connection, order_player)
-        list_order_player = (order_player).split()
-        list_player_orders = (remote_play.get_remote_orders(connection)).split()
-        for i in range(len(list_order_player)):
-            if '@' in list_order_player[i]:
-                dict_order[players[0]]['move'].append(list_order_player[i])
-            elif '*' in list_order_player[i]:
-                dict_order[players[0]]['attack'].append(list_order_player[i])
-            elif 'upgrade' in list_order_player[i]:
-                dict_order[players[0]]['upgrade'].append(list_order_player[i])
-            elif '>' in list_order_player[i] or '<' in list_order_player[i]:
-                dict_order[players[0]]['transfer'].append(list_order_player[i])
+    for player in players:
+        if 'ai' not in player:  # case when player2 is a remote player so we need to get his order and give our orders
+            # get player1 orders and send them to the remote player
+            if player == players[0]:
+                order_player1 = (input("%s, please enter your orders : " % players[0]))
+                remote_play.notify_remote_orders(connection, order_player1)
+                list_order_player = (order_player1).split()
+            # get player2 orders
             else:
-                dict_order[players[0]]['recruit'].append(list_order_player[i])
+                list_order_player = (remote_play.get_remote_orders(connection)).split()
 
-        for i in range(len(list_player_orders)):
-            if '@' in list_player_orders[i]:
-                dict_order[players[1]]['move'].append(list_player_orders[i])
-            elif '*' in list_player_orders[i]:
-                dict_order[players[1]]['attack'].append(list_player_orders[i])
-            elif 'upgrade' in list_player_orders[i]:
-                dict_order[players[1]]['upgrade'].append(list_player_orders[i])
-            elif '>' in list_player_orders[i] or '<' in list_player_orders[i]:
-                dict_order[players[1]]['transfer'].append(list_player_orders[i])
-            else:
-                dict_order[players[1]]['recruit'].append(list_player_orders[i])
-    elif players[1] != 'ai' and players[0] == 'ai':
-        order_player = ai(dict_army, dict_board, players, players[0])
-        remote_play.notify_remote_orders(connection, order_player)
-        list_order_player = (order_player).split()
-        list_player_orders = (remote_play.get_remote_orders(connection)).split()
-        for i in range(len(list_order_player)):
-            if '@' in list_order_player[i]:
-                dict_order[players[0]]['move'].append(list_order_player[i])
-            elif '*' in list_order_player[i]:
-                dict_order[players[0]]['attack'].append(list_order_player[i])
-            elif 'upgrade' in list_order_player[i]:
-                dict_order[players[0]]['upgrade'].append(list_order_player[i])
-            elif '>' in list_order_player[i] or '<' in list_order_player[i]:
-                dict_order[players[0]]['transfer'].append(list_order_player[i])
-            else:
-                dict_order[players[0]]['recruit'].append(list_order_player[i])
-
-        for i in range(len(list_player_orders)):
-            if '@' in list_player_orders[i]:
-                dict_order[players[1]]['move'].append(list_player_orders[i])
-            elif '*' in list_player_orders[i]:
-                dict_order[players[1]]['attack'].append(list_player_orders[i])
-            elif 'upgrade' in list_player_orders[i]:
-                dict_order[players[1]]['upgrade'].append(list_player_orders[i])
-            elif '>' in list_player_orders[i] or '<' in list_player_orders[i]:
-                dict_order[players[1]]['transfer'].append(list_player_orders[i])
-            else:
-                dict_order[players[1]]['recruit'].append(list_player_orders[i])
-
-    else:
-        for player in players:
-            if 'ai' not in player:
-                list_order_player = (input("%s, please enter your orders : " % player)).split()
+        else:  # case when player2 is a local player
+            # get player1 orders
+            if player == players[0]: 
+                order_player1 = (input("%s, please enter your orders : " % players[0]))
             else:
                 list_order_player = ai(dict_army, dict_board, players, player)
-            for i in range(len(list_order_player)):
-                if '@' in list_order_player[i]:
-                    dict_order[player]['move'].append(list_order_player[i])
-                elif '*' in list_order_player[i]:
-                    dict_order[player]['attack'].append(list_order_player[i])
-                elif 'upgrade' in list_order_player[i]:
-                    dict_order[player]['upgrade'].append(list_order_player[i])
-                elif '>' in list_order_player[i] or '<' in list_order_player[i]:
-                    dict_order[player]['transfer'].append(list_order_player[i])
-                else:
-                    dict_order[player]['recruit'].append(list_order_player[i])
+        # place player's orders in dict_order
+        for i in range(len(list_order_player)):
+            if '@' in list_order_player[i]:
+                dict_order[player]['move'].append(list_order_player[i])
+            elif '*' in list_order_player[i]:
+                dict_order[player]['attack'].append(list_order_player[i])
+            elif 'upgrade' in list_order_player[i]:
+                dict_order[player]['upgrade'].append(list_order_player[i])
+            elif '>' in list_order_player[i] or '<' in list_order_player[i]:
+                dict_order[player]['transfer'].append(list_order_player[i])
+            else:
+                dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
     return dict_order
