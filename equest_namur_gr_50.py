@@ -5,19 +5,27 @@ import time
 
 import colored
 
+import remote_play
 
-def game(board_path="board.txt",local_player='IA', remote_id=False):
+def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
     """start the game and play it
+    paramater
+    ---------
+    board_path : path to the board file(str)
+    local_player : id of your group (int, optional)
+    remote_id : id of the other group(int, optional)
+    remote_ip : IP address where the referee or the other group is(str, optional)
 
     Version
     −−−−−−−
-    specification: François Bechet (v.1 24/02/20)
-    implementation: François Bechet (v.1 01/03/20)
+    specification: François Bechet (v.2 24/02/20)
+    implementation: François Bechet (v.2 01/03/20)
     """
     # create the players
 
-    players = [local_player, remote_id]
+    players = [str(local_player), str(remote_id)]
 
+    connection = remote_play.create_connection(local_player,remote_id,remote_ip,True)
     # create dict_recruit
     dict_recruit = {players[0]: {'cruiser': {'ship_type': 'cruiser',
                                              'hp': 100,
@@ -82,8 +90,9 @@ def game(board_path="board.txt",local_player='IA', remote_id=False):
             peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
         except Exception:
             print("One of the players entered a bad order") """
+    play_game = True
     while play_game:
-        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
+        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection)
 
 
 def create_board(board_file, players):
@@ -303,7 +312,7 @@ def display_board(dict_board, height, width, players, dict_army):
         print('\n')
 
 
-def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace):
+def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace,connection ):
     """ manage each turn of the game by receiving the commands of each player
 
     Parameters
@@ -314,14 +323,14 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     dict_recruit: dictionnary with research and stat of new ship(dict)
     players: names of the players(tuple)
     peace : number of turn wihout damage (int)
-
+    connection : sockets to receive/send orders (dict of socket.socket)
     Version
     -------
-    specification: François Bechet (v.2 24/02/20)
+    specification: François Bechet (v.3 24/02/20)
     implementation: François Bechet (v.1 13/03/20)
     """
     # get players orders
-    dict_order = get_order(players, dict_army, dict_board)
+    dict_order = get_order(players, dict_army, dict_board, connection)
     # call all functions to execute the player's orders
     recruit_units(dict_order, dict_army, players, dict_board, dict_recruit)
     upgrade(dict_order, dict_army, dict_recruit, players)
@@ -330,9 +339,11 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     win_condition = attack(dict_order, dict_army, dict_board, height, width, players, peace)
     if win_condition[0] == 'win':
         print('the winner is %s' % win_condition[1])
+        close_connection(connection)
         game(False)
     elif win_condition[2] == 40:
         print("There was no attack during 40 turns so the game ended.")
+        close_connection(connection)
         game(False)
     move(dict_order, dict_board, height, width, dict_army, players)
     energy_transfert(dict_army, dict_order, dict_board, height, width, players)
@@ -341,7 +352,7 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     return win_condition[2]
 
 
-def get_order(players, dict_army, dict_board):
+def get_order(players, dict_army, dict_board,connection):
     """ask the player for orders
 
     Orders must respect this syntax :
@@ -354,15 +365,16 @@ def get_order(players, dict_army, dict_board):
     parameters
     ----------
     players: names of the players(tuple)
-
+    dict_army: dictionnary with the unit of the two player(dict)
+    connection : sockets to receive/send orders (dict of socket.socket)
     return
     ------
     dict_order: dictionnary with all the order
 
     Version
     −−−−−−−
-    specification: Dominik Everaert (v.3 24/02/20)
-    implementation: François Bechet (v.1 01/03/20)
+    specification: Dominik Everaert (v.4 24/02/20)
+    implementation: François Bechet (v.2 01/03/20)
     """
 
     # convert list_oder to dict_order
@@ -370,22 +382,81 @@ def get_order(players, dict_army, dict_board):
                   players[1]: {'move': [], 'attack': [], 'upgrade': [], 'recruit': [], 'transfer': []}}
 
     # ask orders to players and add them to dict_order
-    for player in players:
-        if 'ai' not in player:
-            list_order_player = (input("%s, please enter your orders : " % player)).split()
-        else:
-            list_order_player = ai(dict_army, dict_board, players, player)
+
+    if players[1] != 'ai' and players[0] != 'ai':
+        order_player = (input("%s, please enter your orders : " % players[0]))
+        remote_play.notify_remote_orders(connection, order_player)
+        list_order_player = (order_player).split()
+        list_player_orders = (remote_play.get_remote_orders(connection)).split()
         for i in range(len(list_order_player)):
             if '@' in list_order_player[i]:
-                dict_order[player]['move'].append(list_order_player[i])
+                dict_order[players[0]]['move'].append(list_order_player[i])
             elif '*' in list_order_player[i]:
-                dict_order[player]['attack'].append(list_order_player[i])
+                dict_order[players[0]]['attack'].append(list_order_player[i])
             elif 'upgrade' in list_order_player[i]:
-                dict_order[player]['upgrade'].append(list_order_player[i])
+                dict_order[players[0]]['upgrade'].append(list_order_player[i])
             elif '>' in list_order_player[i] or '<' in list_order_player[i]:
-                dict_order[player]['transfer'].append(list_order_player[i])
+                dict_order[players[0]]['transfer'].append(list_order_player[i])
             else:
-                dict_order[player]['recruit'].append(list_order_player[i])
+                dict_order[players[0]]['recruit'].append(list_order_player[i])
+
+        for i in range(len(list_player_orders)):
+            if '@' in list_player_orders[i]:
+                dict_order[players[1]]['move'].append(list_player_orders[i])
+            elif '*' in list_player_orders[i]:
+                dict_order[players[1]]['attack'].append(list_player_orders[i])
+            elif 'upgrade' in list_player_orders[i]:
+                dict_order[players[1]]['upgrade'].append(list_player_orders[i])
+            elif '>' in list_player_orders[i] or '<' in list_player_orders[i]:
+                dict_order[players[1]]['transfer'].append(list_player_orders[i])
+            else:
+                dict_order[players[1]]['recruit'].append(list_player_orders[i])
+    elif players[1] != 'ai' and players[0] == 'ai':
+        order_player = ai(dict_army, dict_board, players, player)
+        remote_play.notify_remote_orders(connection, order_player)
+        list_order_player = (order_player).split()
+        list_player_orders = (remote_play.get_remote_orders(connection)).split()
+        for i in range(len(list_order_player)):
+            if '@' in list_order_player[i]:
+                dict_order[players[0]]['move'].append(list_order_player[i])
+            elif '*' in list_order_player[i]:
+                dict_order[players[0]]['attack'].append(list_order_player[i])
+            elif 'upgrade' in list_order_player[i]:
+                dict_order[players[0]]['upgrade'].append(list_order_player[i])
+            elif '>' in list_order_player[i] or '<' in list_order_player[i]:
+                dict_order[players[0]]['transfer'].append(list_order_player[i])
+            else:
+                dict_order[players[0]]['recruit'].append(list_order_player[i])
+
+        for i in range(len(list_player_orders)):
+            if '@' in list_player_orders[i]:
+                dict_order[players[1]]['move'].append(list_player_orders[i])
+            elif '*' in list_player_orders[i]:
+                dict_order[players[1]]['attack'].append(list_player_orders[i])
+            elif 'upgrade' in list_player_orders[i]:
+                dict_order[players[1]]['upgrade'].append(list_player_orders[i])
+            elif '>' in list_player_orders[i] or '<' in list_player_orders[i]:
+                dict_order[players[1]]['transfer'].append(list_player_orders[i])
+            else:
+                dict_order[players[1]]['recruit'].append(list_player_orders[i])
+
+    else:
+        for player in players:
+            if 'ai' not in player:
+                list_order_player = (input("%s, please enter your orders : " % player)).split()
+            else:
+                list_order_player = ai(dict_army, dict_board, players, player)
+            for i in range(len(list_order_player)):
+                if '@' in list_order_player[i]:
+                    dict_order[player]['move'].append(list_order_player[i])
+                elif '*' in list_order_player[i]:
+                    dict_order[player]['attack'].append(list_order_player[i])
+                elif 'upgrade' in list_order_player[i]:
+                    dict_order[player]['upgrade'].append(list_order_player[i])
+                elif '>' in list_order_player[i] or '<' in list_order_player[i]:
+                    dict_order[player]['transfer'].append(list_order_player[i])
+                else:
+                    dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
     return dict_order
@@ -905,25 +976,25 @@ def ai(dict_army, dict_board, players, player):
     dict_army: dictionnary with the unit of the two player(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
     players: names of the players(tuple)
-    TODO player
+    player: current player(str)
 
     return
     -----------
-    ai_orders : the order of the ai player (list)
+    ai_orders : the order of the ai player (str)
 
     specification: Dominik Everaert (v.1 4/03/20)
     implementation: François Bechet (v.2 09/04/20)
 
     """
-
-    ai_orders = []
+    ai_orders = ''
     # recruit unit
     unit_list = ['Alfa', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot', 'Golf', 'Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November', 'Oscar', 'Papa', 'Quebec', 'Romeo', 'Sierra', 'Tango', 'Uniform', 'Victor', 'Whiskey', 'X-ray', 'Yankee', 'Zulu']
     unit_name = unit_list[random.randint(0, (len(unit_list)) - 1)]
     unit_type_list = ['tanker', 'cruiser']
     unit_type = unit_type_list[random.randint(0, (len(unit_type_list)) - 1)]
     recruit_order = "%s:%s" % (unit_name, unit_type)
-    ai_orders.append(recruit_order)
+    ai_orders += recruit_order
+
 
     # move
     # move the unit to it's target
@@ -936,7 +1007,7 @@ def ai(dict_army, dict_board, players, player):
                     case_y = int(unit_case[1]) + random.randint(-1, 1)
                     case_x = int(unit_case[0].strip('@')) + random.randint(-1, 1)
                     move_order = '%s:@%s-%s' % (unit, case_x, case_y)
-                    ai_orders.append(move_order)
+                    ai_orders += move_order +' '
     # attack : make all player's units attack
     for case, properties in dict_board.items():
         if player in properties:
@@ -951,7 +1022,7 @@ def ai(dict_army, dict_board, players, player):
                     max_damage = dict_army[player][unit]['current_energy'] // 10
                     damage = random.randint(0, int(max_damage))
                     attack_order = '%s:*%s-%s=%s' % (unit, case_x, case_y, damage)
-                    ai_orders.append(attack_order)
+                    ai_orders += attack_order +' '
 
     # energy transfert
     for case, properties in dict_board.items():
@@ -964,19 +1035,19 @@ def ai(dict_army, dict_board, players, player):
                         case_y = int(unit_case[1]) + random.randint(-1, 1)
                         case_x = int(unit_case[0].strip('@')) + random.randint(-1, 1)
                         transfer_order_peak = attack_order = '%s:<%s-%s' % (unit, case_x, case_y)
-                        ai_orders.append(transfer_order_peak)
+                        ai_orders =+ transfer_order_peak +' '
                         # unit transfer
                         units = []
                         for unit_army in dict_army[player]:
                             units.append(unit_army)
                         receiver = units[random.randint(0, (len(units)) - 1)]
                         transfer_order_unit = '%s:>%s' % (unit, receiver)
-                        ai_orders.append(transfer_order_unit)
+                        ai_orders += transfer_order_unit +' '
 
     # upgrade
     upgrade_list = ['regeneration', 'storage', 'range', 'move']
     upgrade_order = 'upgrade:%s' % (upgrade_list[random.randint(0, 3)])
-    ai_orders.append(upgrade_order)
+    ai_orders += upgrade_order +' '
 
     # sleep for 2 seconds so we can see the ia playing
     time.sleep(0.5)
