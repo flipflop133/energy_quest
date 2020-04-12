@@ -1,15 +1,12 @@
 # imports
 import copy
-import math
 import random
 import time
 
 import colored
 
-import remote_play
 
-
-def game(play_game):
+def game(board_path="board.txt",local_player='IA', remote_id=False):
     """start the game and play it
 
     Version
@@ -19,11 +16,7 @@ def game(play_game):
     """
     # create the players
 
-    players = [' ', ' ']
-    while players[0].isspace():
-        players[0] = input("who is player 1 : ")
-    while players[1].isspace() or (players[1] == players[0]):
-        players[1] = input("who is player 2 : ")
+    players = [local_player, remote_id]
 
     # create dict_recruit
     dict_recruit = {players[0]: {'cruiser': {'ship_type': 'cruiser',
@@ -70,7 +63,7 @@ def game(play_game):
                                               'move': 0}}}
 
     # call the create_board function and store its return values
-    board_values = create_board("board.txt", players)
+    board_values = create_board(board_path, players)
     dict_board, height, width = board_values[0], board_values[1], board_values[2]
 
     # create dictionnary of the army
@@ -84,12 +77,12 @@ def game(play_game):
 
     # start the main game loop
     # TODO : enable this piece of code!
-    """ while play_game is not False:
+    """ while play_game:
         try:
             peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
         except Exception:
             print("One of the players entered a bad order") """
-    while play_game is not False:
+    while play_game:
         peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
 
 
@@ -989,7 +982,3 @@ def ai(dict_army, dict_board, players, player):
     time.sleep(0.5)
     # return all the orders
     return(ai_orders)
-
-
-# Start the game
-game(True)
