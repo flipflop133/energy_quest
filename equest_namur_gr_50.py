@@ -7,6 +7,7 @@ import colored
 
 import remote_play
 
+
 def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
     """start the game and play it
     paramater
@@ -22,10 +23,9 @@ def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1'):
     implementation: François Bechet (v.2 01/03/20)
     """
     # create the players
-
     players = [str(local_player), str(remote_id)]
 
-    connection = remote_play.create_connection(local_player,remote_id,remote_ip,True)
+    connection = remote_play.create_connection(local_player, remote_id, remote_ip, True)
     # create dict_recruit
     dict_recruit = {players[0]: {'cruiser': {'ship_type': 'cruiser',
                                              'hp': 100,
@@ -312,7 +312,7 @@ def display_board(dict_board, height, width, players, dict_army):
         print('\n')
 
 
-def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace,connection ):
+def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection):
     """ manage each turn of the game by receiving the commands of each player
 
     Parameters
@@ -339,11 +339,11 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     win_condition = attack(dict_order, dict_army, dict_board, height, width, players, peace)
     if win_condition[0] == 'win':
         print('the winner is %s' % win_condition[1])
-        close_connection(connection)
+        remote_play.close_connection(connection)
         game(False)
     elif win_condition[2] == 40:
         print("There was no attack during 40 turns so the game ended.")
-        close_connection(connection)
+        remote_play.close_connection(connection)
         game(False)
     move(dict_order, dict_board, height, width, dict_army, players)
     energy_transfert(dict_army, dict_order, dict_board, height, width, players)
@@ -352,7 +352,7 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
     return win_condition[2]
 
 
-def get_order(players, dict_army, dict_board,connection):
+def get_order(players, dict_army, dict_board, connection):
     """ask the player for orders
 
     Orders must respect this syntax :
@@ -412,7 +412,7 @@ def get_order(players, dict_army, dict_board,connection):
             else:
                 dict_order[players[1]]['recruit'].append(list_player_orders[i])
     elif players[1] != 'ai' and players[0] == 'ai':
-        order_player = ai(dict_army, dict_board, players, player)
+        order_player = ai(dict_army, dict_board, players, players[0])
         remote_play.notify_remote_orders(connection, order_player)
         list_order_player = (order_player).split()
         list_player_orders = (remote_play.get_remote_orders(connection)).split()
@@ -995,7 +995,6 @@ def ai(dict_army, dict_board, players, player):
     recruit_order = "%s:%s" % (unit_name, unit_type)
     ai_orders += recruit_order
 
-
     # move
     # move the unit to it's target
     for case, properties in dict_board.items():
@@ -1007,7 +1006,7 @@ def ai(dict_army, dict_board, players, player):
                     case_y = int(unit_case[1]) + random.randint(-1, 1)
                     case_x = int(unit_case[0].strip('@')) + random.randint(-1, 1)
                     move_order = '%s:@%s-%s' % (unit, case_x, case_y)
-                    ai_orders += move_order +' '
+                    ai_orders += move_order + ' '
     # attack : make all player's units attack
     for case, properties in dict_board.items():
         if player in properties:
@@ -1022,7 +1021,7 @@ def ai(dict_army, dict_board, players, player):
                     max_damage = dict_army[player][unit]['current_energy'] // 10
                     damage = random.randint(0, int(max_damage))
                     attack_order = '%s:*%s-%s=%s' % (unit, case_x, case_y, damage)
-                    ai_orders += attack_order +' '
+                    ai_orders += attack_order + ' '
 
     # energy transfert
     for case, properties in dict_board.items():
@@ -1035,19 +1034,19 @@ def ai(dict_army, dict_board, players, player):
                         case_y = int(unit_case[1]) + random.randint(-1, 1)
                         case_x = int(unit_case[0].strip('@')) + random.randint(-1, 1)
                         transfer_order_peak = attack_order = '%s:<%s-%s' % (unit, case_x, case_y)
-                        ai_orders =+ transfer_order_peak +' '
+                        ai_orders += transfer_order_peak + ' '
                         # unit transfer
                         units = []
                         for unit_army in dict_army[player]:
                             units.append(unit_army)
                         receiver = units[random.randint(0, (len(units)) - 1)]
                         transfer_order_unit = '%s:>%s' % (unit, receiver)
-                        ai_orders += transfer_order_unit +' '
+                        ai_orders += transfer_order_unit + ' '
 
     # upgrade
     upgrade_list = ['regeneration', 'storage', 'range', 'move']
     upgrade_order = 'upgrade:%s' % (upgrade_list[random.randint(0, 3)])
-    ai_orders += upgrade_order +' '
+    ai_orders += upgrade_order + ' '
 
     # sleep for 2 seconds so we can see the ia playing
     time.sleep(0.5)
