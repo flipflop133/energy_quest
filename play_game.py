@@ -24,12 +24,14 @@ if game_mode == '2':
         while j is False:
             ai = input("Do you want the local player to be an ai(y/n)? ")
             if ai.upper() == 'Y':
+                players[0] = input("who is local group : ")
                 ai = True
                 j = True
                 print(j)
             elif ai.upper() == 'N':
                 players[0] = input("who is local player : ")
                 j = True
+                ai = False
             else:
                 j = False
     while players[1].isspace() or (players[1] == players[0]):
