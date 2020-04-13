@@ -8,7 +8,7 @@ import colored
 import remote_play
 
 
-def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1', colored_display=True):
+def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', colored_display=True):
     """start the game and play it
     paramater
     ---------
@@ -26,7 +26,12 @@ def game(board_path, local_player='IA', remote_id='IA', remote_ip='127.0.0.1', c
     # create the players
     players = [str(local_player), str(remote_id)]
 
-    connection = remote_play.create_connection(local_player, remote_id, remote_ip, True)
+    # establish connection if player2 is a remote player
+    if 'ai' not in players[1]:
+        connection = remote_play.create_connection(local_player, remote_id, remote_ip, True)
+    else:
+        connection = ''
+
     # create dict_recruit
     dict_recruit = {players[0]: {'cruiser': {'ship_type': 'cruiser',
                                              'hp': 100,
@@ -400,12 +405,15 @@ def get_order(players, dict_army, dict_board, connection):
                   players[1]: {'move': [], 'attack': [], 'upgrade': [], 'recruit': [], 'transfer': []}}
 
     for player in players:
-        if 'ai' not in player:  # case when player2 is a remote player so we need to get his order and give our orders
+        if 'ai' not in players[1]:  # case when player2 is a remote player so we need to get his order and give our orders
             # get player1 orders and send them to the remote player
             if player == players[0]:
-                order_player1 = (input("%s, please enter your orders : " % players[0]))
-                remote_play.notify_remote_orders(connection, order_player1)
-                list_order_player = (order_player1).split()
+                if 'ai' not in players[0]:
+                    order_player1 = (input("%s, please enter your orders : " % players[0]))
+                    remote_play.notify_remote_orders(connection, order_player1)
+                    list_order_player = (order_player1).split()
+                else:
+                    list_order_player = ai(dict_army, dict_board, players, player)
             # get player2 orders
             else:
                 list_order_player = (remote_play.get_remote_orders(connection)).split()
@@ -413,9 +421,9 @@ def get_order(players, dict_army, dict_board, connection):
         else:  # case when player2 is a local player
             # get player1 orders
             if player == players[0]:
-                order_player1 = (input("%s, please enter your orders : " % players[0]))
+                list_order_player = (input("%s, please enter your orders : " % players[0]).split())
             else:
-                list_order_player = ai(dict_army, dict_board, players, player)
+                list_order_player = ai(dict_army, dict_board, players, player).split()
         # place player's orders in dict_order
         for i in range(len(list_order_player)):
             if '@' in list_order_player[i]:
@@ -430,6 +438,7 @@ def get_order(players, dict_army, dict_board, connection):
                 dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
+    print(dict_order)
     return dict_order
 
 
@@ -966,7 +975,7 @@ def ai(dict_army, dict_board, players, player):
     unit_type_list = ['tanker', 'cruiser']
     unit_type = unit_type_list[random.randint(0, (len(unit_type_list)) - 1)]
     recruit_order = "%s:%s" % (unit_name, unit_type)
-    ai_orders += recruit_order
+    ai_orders += recruit_order + ' '
 
     # move
     # move the unit to it's target
