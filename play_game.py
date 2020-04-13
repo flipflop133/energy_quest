@@ -20,12 +20,23 @@ game_mode = input("Choose game mode:")
 if game_mode == '2':
     players = [' ', ' ']
     while players[0].isspace():
-        players[0] = input("who is local player : ")
+        j = False
+        while j is False:
+            ai = input("Do you want the local player to be an ai(y/n)? ")
+            if ai.upper() == 'Y':
+                ai = True
+                j = True
+                print(j)
+            elif ai.upper() == 'N':
+                players[0] = input("who is local player : ")
+                j = True
+            else:
+                j = False
     while players[1].isspace() or (players[1] == players[0]):
         players[1] = input("who is remote player : ")
-    game('test.eq', int(players[0]), int(players[1]), '127.0.0.1', color)
+    game('test.eq', int(players[0]), int(players[1]), '127.0.0.1', ai, color)
 elif game_mode == '1':
     players = [' ', 'ai']
     while players[0].isspace():
         players[0] = input("who is player 1 : ")
-    game('test.eq', players[0], players[1], '127.0.0.1', color)
+    game('test.eq', players[0], players[1], '127.0.0.1', color, )

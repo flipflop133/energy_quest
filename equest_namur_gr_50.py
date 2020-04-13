@@ -8,7 +8,7 @@ import colored
 import remote_play
 
 
-def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', colored_display=True):
+def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', local_ai=False, colored_display=True):
     """start the game and play it
     paramater
     ---------
@@ -31,6 +31,9 @@ def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', c
         connection = remote_play.create_connection(local_player, remote_id, remote_ip, True)
     else:
         connection = ''
+    # case when we play in remote with our ai
+    if local_ai :
+        players[0] = 'ai'
 
     # create dict_recruit
     dict_recruit = {players[0]: {'cruiser': {'ship_type': 'cruiser',
@@ -413,7 +416,9 @@ def get_order(players, dict_army, dict_board, connection):
                     remote_play.notify_remote_orders(connection, order_player1)
                     list_order_player = (order_player1).split()
                 else:
-                    list_order_player = ai(dict_army, dict_board, players, player)
+                    order_player1 = ai(dict_army, dict_board, players, player)
+                    remote_play.notify_remote_orders(connection, order_player1)
+                    list_order_player = (order_player1).split()
             # get player2 orders
             else:
                 list_order_player = (remote_play.get_remote_orders(connection)).split()
