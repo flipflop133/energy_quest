@@ -8,7 +8,7 @@ import colored
 import remote_play
 
 
-def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', local_ai=False, colored_display=True):
+def game(board_path, local_player, remote_id='ai', remote_ip='127.0.0.1', local_ai=False, colored_display=True):
     """start the game and play it
     paramater
     ---------
@@ -32,7 +32,7 @@ def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', l
     else:
         connection = ''
     # case when we play in remote with our ai
-    if local_ai :
+    if local_ai:
         players[0] = 'ai'
 
     # create dict_recruit
@@ -93,15 +93,12 @@ def game(board_path, local_player='ai', remote_id='ai', remote_ip='127.0.0.1', l
     peace = 0
 
     # start the main game loop
-    # TODO : enable this piece of code!
-    """ while play_game:
-        try:
-            peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace)
-        except Exception:
-            print("One of the players entered a bad order") """
     play_game = True
     while play_game:
-        peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection, colored_display)
+        try:
+            peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection, colored_display)
+        except Exception:
+            print("One of the players entered a bad order")
 
 
 def create_board(board_file, players):
@@ -216,6 +213,7 @@ def display_board(dict_board, height, width, players, dict_army, colored_display
 
     # display the board's elements
     armies = {}
+    units_positions = {}
     for x in range(width):
         n = 1
         for y in range(height):
@@ -245,17 +243,27 @@ def display_board(dict_board, height, width, players, dict_army, colored_display
                             armies[case].append(unit)
                 # display dice's faces
                 if len(armies[case]) == 2:
-                    print(white + blue + ' ⚁ ', end='')
+                    print(white + blue + ' ⚁ ', end='' + default_color)
                 elif len(armies[case]) == 3:
-                    print(white + blue + ' ⚂ ', end='')
+                    print(white + blue + ' ⚂ ', end='' + default_color)
                 elif len(armies[case]) == 4:
-                    print(white + blue + ' ⚃ ', end='')
+                    print(white + blue + ' ⚃ ', end='' + default_color)
                 elif len(armies[case]) == 5:
-                    print(white + blue + ' ⚄ ', end='')
+                    print(white + blue + ' ⚄ ', end='' + default_color)
                 else:
-                    print(white + blue + ' ⚅ ', end='')
+                    print(white + blue + ' ⚅ ', end='' + default_color)
             # if there is only one unit on the case
             else:
+                units_positions[case] = []
+                for element in dict_board[case]:
+                    if element == 'peak':
+                        units_positions[case].append(element)
+                    elif element == players[0]:
+                        for unit in dict_board[case][element]:
+                            units_positions[case].append(unit)
+                    elif element == players[1]:
+                        for unit in dict_board[case][element]:
+                            units_positions[case].append(unit)
                 # display player0 hub and units
                 if players[0] in dict_board['@%d-%d' % (x + 1, y + 1)]:
                     tempDict = dict_board['@%d-%d' % (x + 1, y + 1)][players[0]]
@@ -306,30 +314,47 @@ def display_board(dict_board, height, width, players, dict_army, colored_display
 
     # display armies (more than one unit on a case)
     if armies != {}:
-        print('\nARMIES')
+        print(gold + '\nARMIES' + default_color)
         for case in armies:
-            print('case:', case)
+            print('case:', case + ':')
             for unit in armies[case]:
                 print(unit)
+
+    # display the other units positions
+    print(gold + '\nUNITS POSITIONS' + default_color)
+    i = 0
+    for key, value in units_positions.items():
+        if not(value == []) and 'hub' not in value and 'peak' not in value:
+            i += 1
+            print(str(key) + str(value), end='  ▍ ')
+            if i % 5 == 0:  # go to the next line every 5 peaks
+                print('\n')
+
     # display the energy peaks
     print(gold + '\nENERGY PEAKS' + default_color)
     i = 0
     for case in dict_board:
         if 'peak' in dict_board[case]:
             i += 1
-            print(('peak%s') % (case), end='')
-            print('energy :', dict_board[case]['peak']['energy'], end='  ')
+            print(('peak%s') % (case), end=' ')
+            print('energy :', dict_board[case]['peak']['energy'], end='  ▍ ')
             if i % 5 == 0:  # go to the next line every 5 peaks
                 print('\n')
 
     # display the players units and hubs
     for player in players:
+        for x in range(width):
+            n = 1
+            for y in range(height):
+                # set case
+                case = '@%d-%d' % (x + 1, y + 1)
+
         if player == players[0]:
-            print('\n' + green + player + default_color + ' : ')
+            print(green + player + default_color + ' : ')
         else:
-            print('\n' + red + player + default_color + ' : ')
+            print(red + player + default_color + ' : ')
         for unit, value in dict_army[player].items():
-            print(unit.upper())
+            print(unit.upper(), end=' ⇒ ')
             for property, value in dict_army[player][unit].items():
                 if property != 'turn_attack' and property != 'move':  # player don't need to see these properties
                     print(property, ':', value, end=' ▍')
@@ -443,7 +468,6 @@ def get_order(players, dict_army, dict_board, connection):
                 dict_order[player]['recruit'].append(list_order_player[i])
 
     # return dictionnary of orders
-    print(dict_order)
     return dict_order
 
 
@@ -538,54 +562,54 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
             upgrade = dict_order[player]['upgrade'][i]
             upgradeList = upgrade.split(':')
             upgradeList.append(player)
-        # choose which upgrade must be done
-        if upgradeList != '':
-            if upgradeList[1] == 'regeneration':
-                if (dict_army[player]['hub']['current_energy']) >= 750 and (dict_army[player]['hub']['regeneration']) < 50 and (dict_recruit[player]['research']['regeneration']) < 10:
-                    dict_army[player]['hub']['regeneration'] += 5
-                    dict_army[player]['hub']['current_energy'] -= 750
-                    dict_recruit[player]['research']['regeneration'] += 1
-                else:
-                    print("you can't upgrade energy regeneration")
+            # choose which upgrade must be done
+            if upgradeList != '':
+                if upgradeList[1] == 'regeneration':
+                    if (dict_army[player]['hub']['current_energy']) >= 750 and (dict_army[player]['hub']['regeneration']) < 50 and (dict_recruit[player]['research']['regeneration']) < 10:
+                        dict_army[player]['hub']['regeneration'] += 5
+                        dict_army[player]['hub']['current_energy'] -= 750
+                        dict_recruit[player]['research']['regeneration'] += 1
+                    else:
+                        print(player + " you can't upgrade energy regeneration")
 
-            elif upgradeList[1] == 'storage':
-                if (dict_army[player]['hub']['current_energy']) >= 600 and (dict_recruit[player]['research']['storage']) < 6:
-                    dict_recruit[player]['research']['storage'] += 1
-                    dict_army[player]['hub']['current_energy'] -= 600
-                    dict_recruit[player]['tanker']['energy_capacity'] += 100
-                    temp_dict = list(dict_army[player])
-                    # upgrade existing tankers
-                    for i in range(len(temp_dict)):
-                        if dict_army[player][temp_dict[i]]['ship_type'] == 'tanker' and dict_army[player][temp_dict[i]]['energy_capacity'] < 1200:
-                            dict_army[player][temp_dict[i]]['energy_capacity'] += 100
-                else:
-                    print("you can't upgrade energy capacity")
+                elif upgradeList[1] == 'storage':
+                    if (dict_army[player]['hub']['current_energy']) >= 600 and (dict_recruit[player]['research']['storage']) < 6:
+                        dict_recruit[player]['research']['storage'] += 1
+                        dict_army[player]['hub']['current_energy'] -= 600
+                        dict_recruit[player]['tanker']['energy_capacity'] += 100
+                        temp_dict = list(dict_army[player])
+                        # upgrade existing tankers
+                        for i in range(len(temp_dict)):
+                            if dict_army[player][temp_dict[i]]['ship_type'] == 'tanker' and dict_army[player][temp_dict[i]]['energy_capacity'] < 1200:
+                                dict_army[player][temp_dict[i]]['energy_capacity'] += 100
+                    else:
+                        print(player + " you can't upgrade energy capacity")
 
-            elif upgradeList[1] == 'range':
-                if (dict_army[player]['hub']['current_energy']) >= 400 and (dict_recruit[player]['research']['range']) < 4:
-                    dict_recruit[player]['research']['range'] += 1
-                    dict_army[player]['hub']['current_energy'] -= 400
-                    dict_recruit[player]['cruiser']['shooting_range'] += 1
-                    temp_dict = list(dict_army[player])
-                    # upgrade existing cruisers
-                    for i in range(len(temp_dict)):
-                        if dict_army[player][temp_dict[i]]['ship_type'] == 'cruiser' and dict_army[player][temp_dict[i]]['shooting_range'] < 6:
-                            dict_army[player][temp_dict[i]]['shooting_range'] += 1
-                else:
-                    print("you can't upgrade shooting range")
+                elif upgradeList[1] == 'range':
+                    if (dict_army[player]['hub']['current_energy']) >= 400 and (dict_recruit[player]['research']['range']) < 4:
+                        dict_recruit[player]['research']['range'] += 1
+                        dict_army[player]['hub']['current_energy'] -= 400
+                        dict_recruit[player]['cruiser']['shooting_range'] += 1
+                        temp_dict = list(dict_army[player])
+                        # upgrade existing cruisers
+                        for i in range(len(temp_dict)):
+                            if dict_army[player][temp_dict[i]]['ship_type'] == 'cruiser' and dict_army[player][temp_dict[i]]['shooting_range'] < 6:
+                                dict_army[player][temp_dict[i]]['shooting_range'] += 1
+                    else:
+                        print(player + " you can't upgrade shooting range")
 
-            elif upgradeList[1] == 'move':
-                if (dict_army[player]['hub']['current_energy']) >= 500 and (dict_recruit[player]['research']['move']) < 5:
-                    dict_recruit[player]['research']['move'] += 1
-                    dict_army[player]['hub']['current_energy'] -= 500
-                    dict_recruit[player]['cruiser']['move_cost'] -= 1
-                    temp_dict = list(dict_army[player])
-                    # upgrade existing cruisers
-                    for i in range(len(temp_dict)):
-                        if dict_army[player][temp_dict[i]]['ship_type'] == 'cruiser' and dict_army[player][temp_dict[i]]['move_cost'] > 4:
-                            dict_army[player][temp_dict[i]]['move_cost'] -= 1
-                else:
-                    print("you can't upgrade movement")
+                elif upgradeList[1] == 'move':
+                    if (dict_army[player]['hub']['current_energy']) >= 500 and (dict_recruit[player]['research']['move']) < 5:
+                        dict_recruit[player]['research']['move'] += 1
+                        dict_army[player]['hub']['current_energy'] -= 500
+                        dict_recruit[player]['cruiser']['move_cost'] -= 1
+                        temp_dict = list(dict_army[player])
+                        # upgrade existing cruisers
+                        for i in range(len(temp_dict)):
+                            if dict_army[player][temp_dict[i]]['ship_type'] == 'cruiser' and dict_army[player][temp_dict[i]]['move_cost'] > 4:
+                                dict_army[player][temp_dict[i]]['move_cost'] -= 1
+                    else:
+                        print(player + " you can't upgrade movement")
 
     return dict_army, dict_recruit
 
@@ -655,50 +679,46 @@ def attack(dict_order, dict_army, dict_board, height, width, players, peace):
             if dict_army[player][shooter_name]['ship_type'] == 'cruiser':
                 shooting_range = dict_army[player][shooter_name]['shooting_range']
 
-            attackLegality = True
             # check that the targeted case is in the board
-            if x_target > width or x_target < 1 or y_target > height or y_target < 1:
-                attackLegality = False
-            # check that there are units of the target on the targeted case
-            elif target not in dict_board['@%s-%s' % (x_target, y_target)]:
-                attackLegality = False
-            if attackLegality:
-                target_units = []
-                for unit in dict_board['@%s-%s' % (x_target, y_target)][target]:
-                    target_units.append(unit)
+            if x_target <= width and x_target >= 1 and y_target <= height and y_target >= 1:
+                # check that there are units of the target on the targeted case
+                if target in dict_board['@%s-%s' % (x_target, y_target)]:
+                    target_units = []
+                    for unit in dict_board['@%s-%s' % (x_target, y_target)][target]:
+                        target_units.append(unit)
 
-                # execute the attack
-                # check manhattan distance and check that that the unit has enough energy to attack
-                if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target, shooting_range) and dict_army[attacker][shooter_name]['current_energy'] >= 10 * damage:
-                    dict_army[attacker][shooter_name]['current_energy'] -= 10 * damage
-                    for i in target_units:
-                        # change the unit hp : hp = hp - damage
-                        dict_army[target][i]['hp'] -= damage
-                        total_damage += damage
-                # if it's a cruiser disable his move ability for the turn
-                if dict_army[attacker][attackList[0]]['ship_type'] == 'cruiser':
-                    dict_army[attacker][attackList[0]]['turn_attack'] = True
+                    # execute the attack
+                    # check manhattan distance and check that that the unit has enough energy to attack
+                    if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target, shooting_range) and dict_army[attacker][shooter_name]['current_energy'] >= 10 * damage:
+                        dict_army[attacker][shooter_name]['current_energy'] -= 10 * damage
+                        for i in target_units:
+                            # change the unit hp : hp = hp - damage
+                            dict_army[target][i]['hp'] -= damage
+                            total_damage += damage
+                    # if it's a cruiser disable his move ability for the turn
+                    if dict_army[attacker][attackList[0]]['ship_type'] == 'cruiser':
+                        dict_army[attacker][attackList[0]]['turn_attack'] = True
 
-                # delete the unit if damage is >= unit hp
-                for ship in dict_army[player]:
-                    if dict_army[player][ship]['hp'] <= 0:
-                        # if the unit is the hub the attacker win
-                        if ship == 'hub':
-                            if player == players[0]:
-                                winner = players[1]
+                    # delete the unit if damage is >= unit hp
+                    for ship in dict_army[player]:
+                        if dict_army[player][ship]['hp'] <= 0:
+                            # if the unit is the hub the attacker win
+                            if ship == 'hub':
+                                if player == players[0]:
+                                    winner = players[1]
+                                else:
+                                    winner = players[0]
+                                return('win', winner)
                             else:
-                                winner = players[0]
-                            return('win', winner)
-                        else:
-                            del dict_army[player][ship]
-                            # if there is only one unit delete the player key
-                            for case, value in dict_board.items():
-                                if ship in dict_board[case][player]:
-                                    if len(dict_board[case][player]) == 1:
-                                        del dict_board[case][player]
-                                    # else delete only the unit key
-                                    else:
-                                        del dict_board[case][player][ship]
+                                del dict_army[player][ship]
+                                # if there is only one unit delete the player key
+                                for case, value in dict_board.items():
+                                    if ship in dict_board[case][player]:
+                                        if len(dict_board[case][player]) == 1:
+                                            del dict_board[case][player]
+                                        # else delete only the unit key
+                                        else:
+                                            del dict_board[case][player][ship]
     if total_damage == 0:
         peace += 1
     else:
@@ -759,7 +779,7 @@ def move(dict_order, dict_board, height, width, dict_army, players):
                 if dict_army[player][moveList[0]]['ship_type'] == 'cruiser':
                     if dict_army[player][moveList[0]]['current_energy'] < dict_army[player][moveList[0]]['move_cost']:
                         moveLegality = False
-                # check that the targeted case is in the board 1-20 and 1-10
+                # check that the targeted case is in the board
                 if x_target > width or x_target < 1 or y_target > height or y_target < 1:
                     moveLegality = False
                 # check that the targeted case is not the current case
@@ -871,7 +891,7 @@ def energy_transfert(dict_army, dict_order, dict_board, height, width, players):
                             # peak
                             if peak:
                                 # check that the targeted case is in the board
-                                if x_target <= width or x_target >= 1 or y_target <= height or y_target >= 1:
+                                if x_target <= width and x_target >= 1 and y_target <= height and y_target >= 1:
                                     # check that there is a peak on the case
                                     if 'peak' in dict_board['@' + list_order[1]]:
                                         energy_receiver = dict_army[player][list_order[0]]['energy_capacity'] - dict_army[player][list_order[0]]['current_energy']
@@ -1038,4 +1058,5 @@ def ai(dict_army, dict_board, players, player):
     # sleep for 2 seconds so we can see the ia playing
     time.sleep(0.5)
     # return all the orders
+    print("ai orders: " + ai_orders)
     return(ai_orders)

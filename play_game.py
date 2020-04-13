@@ -41,4 +41,4 @@ elif game_mode == '1':
     players = [' ', 'ai']
     while players[0].isspace():
         players[0] = input("who is player 1 : ")
-    game('test.eq', players[0], players[1], '127.0.0.1', color, )
+    game('test.eq', players[0], players[1], '127.0.0.1',False ,color)
