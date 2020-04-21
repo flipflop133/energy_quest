@@ -392,8 +392,8 @@ def play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace
         print('the winner is %s' % win_condition[1])
         remote_play.close_connection(connection)
         game(False)
-    elif win_condition[2] == 40:
-        print("There was no attack during 40 turns so the game ended.")
+    elif win_condition[2] == 400:
+        print("There was no attack during 400 turns so the game ended.")
         remote_play.close_connection(connection)
         game(False)
     move(dict_order, dict_board, height, width, dict_army, players)
@@ -573,7 +573,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                         print(player + " you can't upgrade energy regeneration")
 
                 elif upgradeList[1] == 'storage':
-                    if (dict_army[player]['hub']['current_energy']) >= 600 and (dict_recruit[player]['research']['storage']) < 6:
+                    if (dict_army[player]['hub']['current_energy']) >= 600 and (dict_recruit[player]['research']['storage']) < 3:
                         dict_recruit[player]['research']['storage'] += 1
                         dict_army[player]['hub']['current_energy'] -= 600
                         dict_recruit[player]['tanker']['energy_capacity'] += 100
