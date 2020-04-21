@@ -1,0 +1,68 @@
+def ai(dict_army, dict_board,dict_order,dict_memory, players, player):
+    """make the Ai play
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    players: names of the players(tuple)
+    player: current player(str)
+    dict_memory : dictionnary of order given by the ai in past turn(dict)
+    dict_order: dictionnary with all the orders(dict)
+
+    return
+    -----------
+    ai_orders : the order of the ai player (str)
+
+    specification: Dominik Everaert (v.2 4/03/20)
+    implementation: François Bechet (v.2 09/04/20)
+
+    """
+
+def analyse_recruit(dict_army,players, player):
+    """analyse the game too know if new unit are needed
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    players: names of the players(tuple)
+    player: current player(str)
+
+def analyse_upgrade(dict_army,players,player):
+    """analyse the game too know wich upgrade is needed and affordable
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    players: names of the players(tuple)
+    player: current player(str)
+
+def analyse_attack(dict_army,dict_board,players,player):
+    """analyse the game too know wich unit can attack the enemy 
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    players: names of the players(tuple)
+    player: current player(str)
+
+def analyse_move(dict_army,dict_board,players):
+    """analyse the game too know where  the unit needs to go
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    players: names of the players(tuple)
+    
+
+def analyse_transfer(dict_army,dict_board,players):
+    """analyse the game too know where is energy needed and who can carry it
+
+    parameters
+    ----------
+    dict_army: dictionnary with the unit of the two player(dict)
+    dict_board: dictionnary with all the characteristic of the board (dict)
+    players: names of the players(tuple)
+    
