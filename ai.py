@@ -26,6 +26,7 @@ def ai_play(
     implementation:  (v.1 )
 
     """
+    orders = ''
     # define ally and enemy
     for i in players:
         print(i)
@@ -38,9 +39,12 @@ def ai_play(
     analyse_data(dict_army, dict_board, dict_memory, players)
 
     # determine recruit orders
-    analyse_recruit(dict_army, players, dict_memory)
+    orders += analyse_recruit(dict_army, players, dict_memory)
 
-    return ''
+    # determine move orders
+    analyse_move(dict_army, dict_board, players)
+
+    return orders
 
 
 def analyse_data(dict_army, dict_board, dict_memory, players):
@@ -68,17 +72,18 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
     total_energy_required = 0
     total_energy_giveable = 0
     print(players[0])
+    print(dict_army)
     for unit in dict_army[players[0]]:
-        if dict_army[players[0]][unit]['ship_type'] == 'cruisers':
+        if dict_army[players[0]][unit]['ship_type'] == 'cruiser':
             enemy_cruiser += 1
-        elif dict_army[players[0]][unit]['ship_type'] == 'tankers':
+        elif dict_army[players[0]][unit]['ship_type'] == 'tanker':
             enemy_tanker += 1
     for unit in dict_army[players[1]]:
-        if dict_army[players[1]][unit]['ship_type'] == 'cruisers':
+        if dict_army[players[1]][unit]['ship_type'] == 'cruiser':
             ally_cruiser += 1
             total_energy_required += dict_army[players[1]
                                                ][unit]['energy_capacity']
-        elif dict_army[players[1]][unit]['ship_type'] == 'tankers':
+        elif dict_army[players[1]][unit]['ship_type'] == 'tanker':
             ally_tanker += 1
             total_energy_giveable += dict_army[players[1]
                                                ][unit]['energy_capacity']
@@ -106,15 +111,16 @@ def analyse_recruit(dict_army, players, dict_memory):
     implementation:  (v.1 )
 
     """
-    recruit_units = []
+    recruit_units = ''
     # tankers
     if dict_memory['data']['ally_tanker'] < dict_memory['data']['enemy_tanker'] or dict_memory['data'][
             'ally_tanker'] == 0 or dict_memory['data']['total_energy_required'] > dict_memory['data']['total_energy_giveable']:
-        recruit_units.append(
-            'tanker%s:tanker' %
+        recruit_units += (
+            'tanker_%s:tanker' %
             dict_memory['data']['ally_tanker'])
     # if dict_army[player]
 
+    print(recruit_units)
     return recruit_units
 
 
@@ -160,6 +166,32 @@ def analyse_move(dict_army, dict_board, players):
     implementation:  (v.1 )
 
     """
+    # tanker_0:@5-4
+    for unit in dict_army[players[1]]:
+        if unit == 'tanker':
+            pass
+
+    # determine peaks positions
+    dict_peaks = {}
+    i = 0
+    for case, value in dict_board.items():
+        if 'peak' in value:
+            print(case, value)
+            dict_peaks['hub_' + str(i)] = ({'case': case, 'energy': dict_board[case]['peak']['energy']})
+            i += 1  
+    print(dict_peaks)
+
+    
+    for case, value in dict_board.items():
+        # find tanker position
+        if players[1] in value:
+            for unit, unit_type in dict_board[case][players[1]].items():
+                if unit_type != '':
+                    for c_unit, property in dict_board[case][players[1]][unit].items():
+                        if property == 'tanker':
+                            print(case)
+                
+                # determine the nearest peak
 
 
 def analyse_transfer(dict_army, dict_board, players):
