@@ -1,12 +1,11 @@
 
 
-def ai_play(
-        dict_army,
-        dict_board,
-        dict_memory,
-        players,
-        player,
-        dict_order=''):
+def ai_play(dict_army,
+            dict_board,
+            dict_memory,
+            players,
+            player,
+            dict_order=''):
     """make the Ai play
 
     parameters
@@ -41,8 +40,10 @@ def ai_play(
     # determine recruit orders
     orders += analyse_recruit(dict_army, players, dict_memory)
 
+    dict_peaks = analyse_data(dict_army, dict_board, dict_memory, players)[1]
     # determine move orders
-    orders += analyse_move(dict_army, dict_board, players)
+    orders += analyse_move(dict_army, dict_board, dict_peaks, players)
+    analyse_transfer(dict_army, dict_board, dict_peaks, players)
 
     return orders
 
@@ -81,21 +82,36 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
     for unit in dict_army[players[1]]:
         if dict_army[players[1]][unit]['ship_type'] == 'cruiser':
             ally_cruiser += 1
-            total_energy_required += dict_army[players[1]
-                                               ][unit]['energy_capacity']
+            total_energy_required += dict_army[
+                players[1]][unit]['energy_capacity']
         elif dict_army[players[1]][unit]['ship_type'] == 'tanker':
             ally_tanker += 1
-            total_energy_giveable += dict_army[players[1]
-                                               ][unit]['energy_capacity']
+            total_energy_giveable += dict_army[
+                players[1]][unit]['energy_capacity']
 
-    dict_memory['data'].update({'enemy_cruiser': enemy_cruiser,
-                                'enemy_tanker': enemy_tanker,
-                                'ally_cruiser': ally_cruiser,
-                                'ally_tanker': ally_tanker,
-                                'total_energy_required': total_energy_required,
-                                'total_energy_giveable': total_energy_giveable})
-    print(dict_memory)
-    return dict_memory
+    dict_memory['data'].update({
+        'enemy_cruiser': enemy_cruiser,
+        'enemy_tanker': enemy_tanker,
+        'ally_cruiser': ally_cruiser,
+        'ally_tanker': ally_tanker,
+        'total_energy_required': total_energy_required,
+        'total_energy_giveable': total_energy_giveable
+    })
+
+    # determine peaks positions
+    dict_peaks = {}
+    i = 0
+    for case, value in dict_board.items():
+        if 'peak' in value:
+            dict_peaks['peak_' + str(i)] = ({
+                'case':
+                case,
+                'energy':
+                dict_board[case]['peak']['energy']
+            })
+            i += 1
+
+    return dict_memory, dict_peaks
 
 
 def analyse_recruit(dict_army, players, dict_memory):
@@ -113,14 +129,14 @@ def analyse_recruit(dict_army, players, dict_memory):
     """
     recruit_units = ''
     # tankers
-    if dict_memory['data']['ally_tanker'] < dict_memory['data']['enemy_tanker'] or dict_memory['data'][
-            'ally_tanker'] == 0 or dict_memory['data']['total_energy_required'] > dict_memory['data']['total_energy_giveable']:
-        recruit_units += (
-            'tanker_%s:tanker' %
-            dict_memory['data']['ally_tanker'])
+    if dict_memory['data']['ally_tanker'] < dict_memory['data'][
+            'enemy_tanker'] or dict_memory['data'][
+                'ally_tanker'] == 0 or dict_memory['data'][
+                    'total_energy_required'] > dict_memory['data'][
+                        'total_energy_giveable']:
+        recruit_units += ('tanker_%s:tanker' %
+                          dict_memory['data']['ally_tanker'])
     # if dict_army[player]
-
-    print(recruit_units)
     return recruit_units
 
 
@@ -151,6 +167,7 @@ def analyse_attack(dict_army, dict_board, players):
     implementation: Dominik Everaert (v.1 28/04/20)
 
     """
+    from equest_namur_gr_50 import compute_manhattan_distance
     x_shooter = ''
     y_shooter = ''
     x_target = ''
@@ -180,13 +197,14 @@ def analyse_attack(dict_army, dict_board, players):
                             case_0 = case[0].strip('@')
                             x_target, y_target = int(case_0), int(case[1])
                 # check if the range is correct
-                if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target, shooting_range):
+                if compute_manhattan_distance(x_shooter, y_shooter, x_target,
+                                              y_target, shooting_range):
                     # take 1/4 of the energy as dammage
                     dammage = dict_army[players[1]][shooter]['current_energy']
                     dammage = (dammage // 10) / 4
 
 
-def analyse_move(dict_army, dict_board, players):
+def analyse_move(dict_army, dict_board, dict_peaks, players):
     """analyse the game too know where  the unit needs to go
 
     parameters
@@ -201,27 +219,23 @@ def analyse_move(dict_army, dict_board, players):
     """
     move_units = ''
 
-    # determine peaks positions
-    dict_peaks = {}
-    i = 0
-    for case, value in dict_board.items():
-        if 'peak' in value:
-            dict_peaks['peak_' + str(i)] = ({'case': case, 'energy': dict_board[case]['peak']['energy']})
-            i += 1
+    
 
     # move tankers to the nearest peak
     for unit in dict_army[players[1]]:
-        if unit != 'hub' and dict_army[players[1]][unit]['ship_type'] == 'tanker':
+        if unit != 'hub' and dict_army[
+                players[1]][unit]['ship_type'] == 'tanker':
             for case in dict_board:
-                if players[1] in dict_board[case] and unit in dict_board[case][players[1]]:
+                if players[1] in dict_board[case] and unit in dict_board[case][
+                        players[1]]:
                     peak = find_nearest_peak(dict_peaks, case)
                     case_peak = dict_peaks[peak]['case']
                     move_units += "%s:%s" % (unit, go_to(case, case_peak))
-    return(move_units)
+    return (move_units)
 
 
-def analyse_transfer(dict_army, dict_board, players):
-    """analyse the game too know where is energy needed and who can carry it
+def analyse_transfer(dict_army, dict_board, dict_peaks, players):
+    """analyse the game to know where is energy needed and who can carry it
 
     parameters
     ----------
@@ -233,6 +247,20 @@ def analyse_transfer(dict_army, dict_board, players):
     implementation:  (v.1 )
 
     """
+    from equest_namur_gr_50 import compute_manhattan_distance
+    # check if there's a tanker near a peak
+    for unit in dict_army[players[1]]:
+        if unit != 'hub' and dict_army[
+                players[1]][unit]['ship_type'] == 'tanker':
+            for case in dict_board:
+                if players[1] in dict_board[case] and unit in dict_board[case][
+                        players[1]]:
+                    peak = find_nearest_peak(dict_peaks, case)
+                    case_peak = dict_peaks[peak]['case']
+
+                    compute_manhattan_distance([x_shooter], [y_shooter], [x_target], [y_target])     
+
+    # determine if the tanker is near a peak
 
 
 def go_to(case_0, case_1):
@@ -257,18 +285,20 @@ def go_to(case_0, case_1):
     case_1_y = int(case_1[1])
 
     # determine destination position
-    if case_0_x > case_1_x:
-        case_0_x = case_0_x - 1
-    elif case_0_x < case_1_x:
-        case_0_x = case_0_x + 1
+    if abs(case_0_x - case_1_x) > 1:  # don't need to be on the unit
+        if case_0_x > case_1_x:
+            case_0_x = case_0_x - 1
+        elif case_0_x < case_1_x:
+            case_0_x = case_0_x + 1
 
-    if case_0_y > case_1_y:
-        case_0_y = case_0_y - 1
-    elif case_0_y < case_1_y:
-        case_0_y = case_0_y + 1
+    if abs(case_0_y - case_1_y) > 1:  # don't need to be on the unit
+        if case_0_y > case_1_y:
+            case_0_y = case_0_y - 1
+        elif case_0_y < case_1_y:
+            case_0_y = case_0_y + 1
 
     case = ("@%i-%i") % (case_0_x, case_0_y)
-    return(case)
+    return (case)
 
 
 def find_nearest_peak(dict_peaks, case):
@@ -304,4 +334,4 @@ def find_nearest_peak(dict_peaks, case):
         y = abs(int(case_y) - int(case_1))
         dict_distance[peak] = (abs(x - y))
 
-    return(min(dict_distance, key=dict_distance.get))
+    return (min(dict_distance, key=dict_distance.get))
