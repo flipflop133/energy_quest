@@ -42,7 +42,7 @@ def ai_play(
     orders += analyse_recruit(dict_army, players, dict_memory)
 
     # determine move orders
-    analyse_move(dict_army, dict_board, players)
+    orders += analyse_move(dict_army, dict_board, players)
 
     return orders
 
@@ -166,32 +166,25 @@ def analyse_move(dict_army, dict_board, players):
     implementation:  (v.1 )
 
     """
-    # tanker_0:@5-4
-    for unit in dict_army[players[1]]:
-        if unit == 'tanker':
-            pass
+    move_units = ''
 
     # determine peaks positions
     dict_peaks = {}
     i = 0
     for case, value in dict_board.items():
         if 'peak' in value:
-            print(case, value)
-            dict_peaks['hub_' + str(i)] = ({'case': case, 'energy': dict_board[case]['peak']['energy']})
-            i += 1  
-    print(dict_peaks)
+            dict_peaks['peak_' + str(i)] = ({'case': case, 'energy': dict_board[case]['peak']['energy']})
+            i += 1
 
-    
-    for case, value in dict_board.items():
-        # find tanker position
-        if players[1] in value:
-            for unit, unit_type in dict_board[case][players[1]].items():
-                if unit_type != '':
-                    for c_unit, property in dict_board[case][players[1]][unit].items():
-                        if property == 'tanker':
-                            print(case)
-                
-                # determine the nearest peak
+    # move tankers to the nearest peak
+    for unit in dict_army[players[1]]:
+        if unit != 'hub' and dict_army[players[1]][unit]['ship_type'] == 'tanker':
+            for case in dict_board:
+                if players[1] in dict_board[case] and unit in dict_board[case][players[1]]:
+                    peak = find_nearest_peak(dict_peaks, case)
+                    case_peak = dict_peaks[peak]['case']
+                    move_units += "%s:%s" % (unit, go_to(case, case_peak))
+    return(move_units)
 
 
 def analyse_transfer(dict_army, dict_board, players):
@@ -207,3 +200,75 @@ def analyse_transfer(dict_army, dict_board, players):
     implementation:  (v.1 )
 
     """
+
+
+def go_to(case_0, case_1):
+    """move from case_0 to case_1
+
+    parameters
+    ----------
+    case_0: case of current position(str)
+    case_1: case of destination(str)
+
+    specification: François Bechet (v.1 28/04/20)
+    implementation: François Bechet (v.1 28/04/20)
+    """
+    # extract x,y positions from case_0
+    case_0 = case_0.split('-')
+    case_0_x = int(case_0[0].strip('@'))
+    case_0_y = int(case_0[1])
+
+    # extract x,y positions from case_1
+    case_1 = case_1.split('-')
+    case_1_x = int(case_1[0].strip('@'))
+    case_1_y = int(case_1[1])
+
+    # determine destination position
+    if case_0_x > case_1_x:
+        case_0_x = case_0_x - 1
+    elif case_0_x < case_1_x:
+        case_0_x = case_0_x + 1
+
+    if case_0_y > case_1_y:
+        case_0_y = case_0_y - 1
+    elif case_0_y < case_1_y:
+        case_0_y = case_0_y + 1
+
+    case = ("@%i-%i") % (case_0_x, case_0_y)
+    return(case)
+
+
+def find_nearest_peak(dict_peaks, case):
+    """compute the distance between a cruiser and its target
+
+    Parameters
+    ----------
+    x_shooter: coordinate x of the shooter(int)
+    y_shooter: coordinate y of the shooter(int)
+    x_target: coordinate x of the target(int)
+    y_target: coordinate y of the target(int)
+
+    Return
+    ------
+    distance: distance between the cruiser and the target(int)
+
+    Version
+    -------
+    specification: François Bechet (v.1 28/04/20)
+    implementation: François Bechet (v.1 28/04/20)
+    """
+    case = case.split('-')
+    case_x = case[0].strip('@')
+    case_y = case[1]
+
+    dict_distance = {}
+    for peak in dict_peaks:
+        case_peak = dict_peaks[peak]['case'].split('-')
+        case_0 = case_peak[0].strip('@')
+        case_1 = case_peak[1]
+
+        x = abs(int(case_x) - int(case_0))
+        y = abs(int(case_y) - int(case_1))
+        dict_distance[peak] = (abs(x - y))
+
+    return(min(dict_distance, key=dict_distance.get))
