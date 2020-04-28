@@ -241,13 +241,13 @@ def display_board(dict_board, height, width, players, dict_army,
     # define colored colors
     if colored_display:
         default_color = colored.attr('reset')
-        green = colored.fg('#32cd32')
+        green = colored.fg('#00ff00')
         red = colored.fg('#ff0000')
-        gold = colored.fg('#fdd835')
+        gold = colored.fg('#ffbd00')
         blue = colored.bg('#006994')
         white = colored.fg('#ffffff')
         grey = colored.fg('#999999')
-        cyan = colored.fg('#8bf6ff')
+        cyan = colored.fg('#118ab2')
     else:
         default_color = ''
         green = ''
