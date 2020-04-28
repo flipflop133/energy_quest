@@ -148,9 +148,42 @@ def analyse_attack(dict_army, dict_board, players):
     players: names of the players(tuple)
 
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation: Dominik Everaert (v.1 28/04/20)
 
     """
+    x_shooter = ''
+    y_shooter = ''
+    x_target = ''
+    y_target = ''
+    shooting_range = 0
+    # pick a unit from army
+    for shooter in dict_army[players[1]]:
+        # check if it is a cruiser
+        if dict_army[players[1]][shooter]['ship_type'] == 'cruiser':
+            # pick its coordinate
+            for key, value in dict_board.items():
+                if players[1] in value:
+                    unit = value[players[1]]
+                    if shooter in unit:
+                        case = key.split('-')
+                        case_0 = case[0].strip('@')
+                        x_shooter, y_shooter = int(case_0), int(case[1])
+            # pick its shooting_range
+            shooting_range = dict_army[players[1]][shooter]['shooting_range']
+            # pick the coordinate of a possible target
+            for target in dict_army[players[0]]:
+                for key, value in dict_board.items():
+                    if players[0] in value:
+                        unit = value[players[0]]
+                        if target in unit:
+                            case = key.split('-')
+                            case_0 = case[0].strip('@')
+                            x_target, y_target = int(case_0), int(case[1])
+                # check if the range is correct
+                if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target, shooting_range):
+                    # take 1/4 of the energy as dammage
+                    dammage = dict_army[players[1]][shooter]['current_energy']
+                    dammage = (dammage // 10) / 4
 
 
 def analyse_move(dict_army, dict_board, players):
