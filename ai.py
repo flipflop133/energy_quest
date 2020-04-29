@@ -22,7 +22,7 @@ def ai_play(dict_army,
     ai_orders : the order of the ai player (str)
 
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation:  François Bechet (v.1  27/04/20)
 
     """
     orders = ''
@@ -37,6 +37,7 @@ def ai_play(dict_army,
     # determine recruit orders
     orders += analyse_recruit(dict_army, players, dict_memory)
     orders += analyse_attack(dict_army, dict_board, players)
+    orders += analyse_upgrade(dict_army,dict_memory,dict_recruit, players)
 
     dict_peaks = analyse_data(dict_army, dict_board, dict_memory, players)[1]
     dict_enemy_cruisers = analyse_data(dict_army, dict_board, dict_memory, players)[2]
@@ -59,11 +60,12 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
 
     returns
     -------
-    dict_memory :dictionnary of order given by the ai in past turn(dict)
+    dict_memory :dictionnary of order given by the ai in past turn and useful data(dict)
+
     Version
     −−−−−−−
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation:  François Bechet (v.1  27/04/20)
     """
     # determine some stats
     enemy_cruiser = 0
@@ -129,6 +131,10 @@ def analyse_recruit(dict_army, players, dict_memory):
     players: names of the players(tuple)
     dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
 
+    return
+    ------
+    recruit_units: wich units need to be build by ia(str)
+
     specification: Dominik Everaert (v.1 20/04/20)
     implementation:  (v.1 )
 
@@ -165,13 +171,38 @@ def analyse_upgrade(dict_army,dict_memory,dict_recruit, players):
     dict_recruit: dictionnary with research and stat of new ship(dict)
     players: names of the players(tuple)
 
+    return
+    ------
+    upgrade_orders : upgrade orders for the ia(str)
+
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation: Dominik Everaert  (v.1 29/04/20)
 
     """
+    upgrade_orders = ''
+    lim_regen = 2 + min(dict_recruit[players[1]]['research']['storage'],dict_recruit[players[1]]['research']['range'],dict_recruit[players[1]]['research']['move'])
+    lim_storage = min(dict_recruit[players[1]]['research']['regeneration'],dict_recruit[players[1]]['research']['range'],dict_recruit[players[1]]['research']['move'])
+    lim_range = 2 + min(dict_recruit[players[1]]['research']['storage'],dict_recruit[players[1]]['research']['regeneration'],dict_recruit[players[1]]['research']['move'])
+    lim_move = 2 + min(dict_recruit[players[1]]['research']['storage'],dict_recruit[players[1]]['research']['range'],dict_recruit[players[1]]['research']['regeneration'])
+    #check if  ther is two ally tanker
     if dict_memory['data']['ally_tanker'] > 2 :
-        if dict_recruit[players[1]][][]
-
+        #see wich upgrade need to be made
+        if (dict_recruit[players[1]]['research']['regeneration'])<5 and dict_recruit[players[1]]['research']['regeneration']<lim_regen and
+            (dict_army[player[1]]['hub']['current_energy']) >= 750  :
+            upgrade_orders = 'upgrade:regeneration'
+            return upgrade_orders
+        elif (dict_recruit[players[1]]['research']['storage'])<3 and dict_recruit[players[1]]['research']['storage']<lim_storage and
+            (dict_army[player[1]]['hub']['current_energy']) >= 600 :
+            upgrade_orders = 'upgrade:storage'
+            return upgrade_orders
+        elif (dict_recruit[players[1]]['research']['move'])<5 and dict_recruit[players[1]]['research']['move']<lim_move and
+            (dict_army[player[1]]['hub']['current_energy']) >= 500 :
+            upgrade_orders = 'upgrade:move'
+            return upgrade_orders
+        elif (dict_recruit[players[1]]['research']['range'])<5 and dict_recruit[players[1]]['research']['range']<lim_range and
+            (dict_army[player[1]]['hub']['current_energy']) >= 400 :
+            upgrade_orders = 'upgrade:range'
+            return upgrade_orders
 
 
 def analyse_attack(dict_army, dict_board, players):
@@ -182,6 +213,10 @@ def analyse_attack(dict_army, dict_board, players):
     dict_army: dictionnary with the unit of the two player(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
     players: names of the players(tuple)
+
+    return
+    ------
+    attack_orders : attack order made by ia(str)
 
     specification: Dominik Everaert (v.1 20/04/20)
     implementation: Dominik Everaert (v.1 28/04/20)
@@ -236,9 +271,14 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players
     dict_army: dictionnary with the unit of the two player(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
     players: names of the players(tuple)
+    TODO specification: dict_peaks,dict_ennemy_cruise
+    return
+    ------
+    move_units : movements made by ia (str)
+
 
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation:  François Bechet (v.1  28/04/20)
 
     """
     move_units = ''
@@ -277,7 +317,7 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, players):
     players: names of the players(tuple)
 
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation:  François Bechet (v.1  29/04/20)
 
     """
     from equest_namur_gr_50 import compute_manhattan_distance
