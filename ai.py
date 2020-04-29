@@ -14,7 +14,7 @@ def ai_play(dict_army,
     dict_board: dictionnary with all the characteristic of the board (dict)
     players: names of the players(tuple)
     player: current player(str)
-    dict_memory : dictionnary of order given by the ai in past turn(dict)
+    dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
     dict_order: dictionnary with all the orders(dict)
 
     return
@@ -54,6 +54,7 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
     ----------
     dict_army: dictionnary with the unit of the two player(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
+    dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
     players: names of the players(tuple)
 
     returns
@@ -126,7 +127,7 @@ def analyse_recruit(dict_army, players, dict_memory):
     ----------
     dict_army: dictionnary with the unit of the two player(dict)
     players: names of the players(tuple)
-    dict_memory : dictionnary of order given by the ai in past turn(dict)
+    dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
 
     specification: Dominik Everaert (v.1 20/04/20)
     implementation:  (v.1 )
@@ -154,18 +155,23 @@ def analyse_recruit(dict_army, players, dict_memory):
     return recruit_units
 
 
-def analyse_upgrade(dict_army, players):
+def analyse_upgrade(dict_army,dict_memory,dict_recruit, players):
     """analyse the game to know which upgrade is needed and affordable
 
     parameters
     ----------
     dict_army: dictionnary with the unit of the two player(dict)
+    dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
+    dict_recruit: dictionnary with research and stat of new ship(dict)
     players: names of the players(tuple)
 
     specification: Dominik Everaert (v.1 20/04/20)
     implementation:  (v.1 )
 
     """
+    if dict_memory['data']['ally_tanker'] > 2 :
+        if dict_recruit[players[1]][][]
+
 
 
 def analyse_attack(dict_army, dict_board, players):
