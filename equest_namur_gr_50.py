@@ -679,7 +679,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                     if (dict_army[player]['hub']['current_energy']
                         ) >= 750 and (dict_army[player]['hub']['regeneration']
                                       ) < 50 and (dict_recruit[player][
-                                          'research']['regeneration']) < 10:
+                                          'research']['regeneration']) < 5:
                         dict_army[player]['hub']['regeneration'] += 5
                         dict_army[player]['hub']['current_energy'] -= 750
                         dict_recruit[player]['research']['regeneration'] += 1
@@ -701,7 +701,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                             if dict_army[player][temp_dict[i]][
                                     'ship_type'] == 'tanker' and dict_army[
                                         player][temp_dict[i]][
-                                            'energy_capacity'] < 1200:
+                                            'energy_capacity'] < 900:
                                 dict_army[player][
                                     temp_dict[i]]['energy_capacity'] += 100
                     else:
@@ -729,7 +729,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                 elif upgradeList[1] == 'move':
                     if (dict_army[player]['hub']['current_energy']
                         ) >= 500 and (
-                            dict_recruit[player]['research']['move']) < 5:
+                            dict_recruit[player]['research']['move']) < 4:
                         dict_recruit[player]['research']['move'] += 1
                         dict_army[player]['hub']['current_energy'] -= 500
                         dict_recruit[player]['cruiser']['move_cost'] -= 1
