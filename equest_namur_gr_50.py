@@ -12,7 +12,7 @@ def game(board_path,
          remote_id='ai',
          remote_ip='127.0.0.1',
          local_ai=False,
-         colored_display=True):
+         colored_display=True, play_game = True):
     """start the game and play it
     paramater
     ---------
@@ -121,16 +121,16 @@ def game(board_path,
     peace = 0
 
     # start the main game loop
-    play_game = True
+
     # while play_game:
     #     try:
     #         peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection, colored_display)
     #     except Exception:
     #         print("One of the players entered a bad order")
     while play_game:
-        peace = play_turn(dict_board, dict_army, dict_recruit, dict_memory,
+        peace,play_game = play_turn(dict_board, dict_army, dict_recruit, dict_memory,
                           width, height, players, peace, connection,
-                          colored_display)
+                          colored_display, play_game)
 
 
 def create_board(board_file, players):
@@ -236,7 +236,7 @@ def display_board(dict_board, height, width, players, dict_army,
     Version
     −−−−−−−
     specification: Dominik Everaert (v.3 24/02/20)
-    implementation: François Bechet (v.1 01/03/20)
+    implementation: François Bechet (v.2 01/03/20)
     """
     # define colored colors
     if colored_display:
@@ -432,7 +432,7 @@ def display_board(dict_board, height, width, players, dict_army,
 
 
 def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
-              players, peace, connection, colored_display):
+              players, peace, connection, colored_display, play_game):
     """ manage each turn of the game by receiving the commands of each player
 
     Parameters
@@ -446,6 +446,14 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
     peace : number of turn wihout damage (int)
     connection : sockets to receive/send orders (dict of socket.socket)
     colored_display : enable or display colors for the display(bool)
+    play_game : verify if the game need to continue(str)
+
+    return
+    ------
+    play_game : verify if the game need to continue(str)
+    peace : number of turn wihout damage (int)
+
+
     Version
     -------
     specification: François Bechet (v.3 24/02/20)
@@ -453,7 +461,7 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
     """
     # get players orders
     dict_order = get_order(players, dict_army, dict_board, dict_memory,
-                           connection)
+                           connection, dict_recruit)
     # call all functions to execute the player's orders
     recruit_units(dict_order, dict_army, players, dict_board, dict_recruit)
     upgrade(dict_order, dict_army, dict_recruit, players)
@@ -463,21 +471,25 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
                            players, peace)
     if win_condition[0] == 'win':
         print('the winner is %s' % win_condition[1])
-        remote_play.close_connection(connection)
-        game(False)
+        if 'ai' not in players[1]:
+            remote_play.close_connection(connection)
+        play_game = False
     elif win_condition[2] == 400:
         print("There was no attack during 400 turns so the game ended.")
-        remote_play.close_connection(connection)
-        game(False)
-    move(dict_order, dict_board, height, width, dict_army, players)
-    energy_transfert(dict_army, dict_order, dict_board, height, width, players)
-    regenerate(dict_army, players)
-    display_board(dict_board, height, width, players, dict_army,
-                  colored_display)
-    return win_condition[2]
+        if 'ai' not in players[1]:
+            remote_play.close_connection(connection)
+        play_game = False
+    else:
+        move(dict_order, dict_board, height, width, dict_army, players)
+        energy_transfert(dict_army, dict_order, dict_board, height, width, players)
+        regenerate(dict_army, players)
+        display_board(dict_board, height, width, players, dict_army,
+                      colored_display)
+    return win_condition[2], play_game
 
 
-def get_order(players, dict_army, dict_board, dict_memory, connection):
+def get_order(players, dict_army, dict_board, dict_memory, connection,
+              dict_recruit):
     """ask the player for orders
 
     Orders must respect this syntax :
@@ -494,6 +506,7 @@ def get_order(players, dict_army, dict_board, dict_memory, connection):
     dict_board: dictionnary with all the characteristic of the board (dict)
     dict_memory : dictionnary of order given by the ai in past turn(dict)
     connection : sockets to receive/send orders (dict of socket.socket)
+
     return
     ------
     dict_order: dictionnary with all the order
@@ -535,7 +548,8 @@ def get_order(players, dict_army, dict_board, dict_memory, connection):
                     list_order_player = (order_player1).split()
                 else:
                     order_player1 = ai.ai_play(dict_army, dict_board,
-                                               dict_memory, players, player)
+                                               dict_memory, dict_recruit,
+                                               players, player)
                     remote_play.notify_remote_orders(connection, order_player1)
                     list_order_player = (order_player1).split()
             # get player2 orders
@@ -550,8 +564,8 @@ def get_order(players, dict_army, dict_board, dict_memory, connection):
                                            players[0]).split())
             else:
                 list_order_player = ai.ai_play(dict_army, dict_board,
-                                               dict_memory, players,
-                                               player).split()
+                                               dict_memory, dict_recruit,
+                                               players, player).split()
         # place player's orders in dict_order
         for i in range(len(list_order_player)):
             if '@' in list_order_player[i]:
@@ -1047,9 +1061,10 @@ def energy_transfert(dict_army, dict_order, dict_board, height, width,
                             # check that there is a peak on the case
                             if 'peak' in dict_board['@' + list_order[1]]:
                                 energy_receiver = dict_army[player][list_order[0]]['energy_capacity'] - \
-                                    dict_army[player][list_order[0]]['current_energy']
-                                energy_giver = dict_board['@' + \
-                                    list_order[1]]['peak']['energy']
+                                    dict_army[player][list_order[0]
+                                                      ]['current_energy']
+                                energy_giver = dict_board[
+                                    '@' + list_order[1]]['peak']['energy']
                                 if energy_giver <= energy_receiver:
                                     energy = energy_giver
                                 else:

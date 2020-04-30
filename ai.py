@@ -3,9 +3,9 @@
 def ai_play(dict_army,
             dict_board,
             dict_memory,
+            dict_recruit,
             players,
-            player,
-            dict_order=''):
+            player,):
     """make the Ai play
 
     parameters
@@ -15,7 +15,6 @@ def ai_play(dict_army,
     players: names of the players(tuple)
     player: current player(str)
     dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
-    dict_order: dictionnary with all the orders(dict)
 
     return
     -----------
@@ -37,14 +36,17 @@ def ai_play(dict_army,
     # determine recruit orders
     orders += analyse_recruit(dict_army, players, dict_memory)
     orders += analyse_attack(dict_army, dict_board, players)
-    orders += analyse_upgrade(dict_army,dict_memory,dict_recruit, players)
+    orders += analyse_upgrade(dict_army, dict_memory, dict_recruit, players)
 
     dict_peaks = analyse_data(dict_army, dict_board, dict_memory, players)[1]
-    dict_enemy_cruisers = analyse_data(dict_army, dict_board, dict_memory, players)[2]
+    dict_enemy_cruisers = analyse_data(
+        dict_army, dict_board, dict_memory, players)[2]
     # determine move orders
-    orders += analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players)
-    analyse_transfer(dict_army, dict_board, dict_peaks, players)
+    orders += analyse_move(dict_army, dict_board,
+                           dict_peaks, dict_enemy_cruisers, players)
+    orders += analyse_transfer(dict_army, dict_board, dict_peaks, players)
 
+    print(orders)
     return orders
 
 
@@ -58,7 +60,7 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
     dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
     players: names of the players(tuple)
 
-    returns
+    return
     -------
     dict_memory :dictionnary of order given by the ai in past turn and useful data(dict)
 
@@ -136,16 +138,16 @@ def analyse_recruit(dict_army, players, dict_memory):
     recruit_units: wich units need to be build by ia(str)
 
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation:  (v.1 )
+    implementation: François Bechet (v.1 28/04/20)
 
     """
     recruit_units = ''
     # tankers
-    if dict_memory['data']['ally_tanker'] < dict_memory['data'][
+    if (dict_memory['data']['ally_tanker'] < dict_memory['data'][
             'enemy_tanker'] or dict_memory['data'][
-                'ally_tanker'] == 0 or dict_memory['data'][
+                'ally_tanker'] < 2 or dict_memory['data'][
                     'total_energy_required'] > dict_memory['data'][
-                        'total_energy_giveable']:
+                        'total_energy_giveable']):
         recruit_units += (' tanker_%s:tanker ' %
                           dict_memory['data']['ally_tanker'])
 
@@ -156,12 +158,13 @@ def analyse_recruit(dict_army, players, dict_memory):
                 'ally_cruiser'] == 0 or dict_memory['data'][
                     'total_energy_required'] > dict_memory['data'][
                         'total_energy_giveable']) and (dict_memory['data']['ally_tanker'] >= 1):
-        recruit_units += (' cruiser_%s:cruiser ' % dict_memory['data']['ally_cruiser'])
+        recruit_units += (' cruiser_%s:cruiser ' %
+                          dict_memory['data']['ally_cruiser'])
     # if dict_army[player]
     return recruit_units
 
 
-def analyse_upgrade(dict_army,dict_memory,dict_recruit, players):
+def analyse_upgrade(dict_army, dict_memory, dict_recruit, players):
     """analyse the game to know which upgrade is needed and affordable
 
     parameters
@@ -176,33 +179,37 @@ def analyse_upgrade(dict_army,dict_memory,dict_recruit, players):
     upgrade_orders : upgrade orders for the ia(str)
 
     specification: Dominik Everaert (v.1 20/04/20)
-    implementation: Dominik Everaert  (v.1 29/04/20)
+    implementation: Dominik Everaert (v.1 29/04/20)
 
     """
     upgrade_orders = ''
-    lim_regen = 2 + min(dict_recruit[players[1]]['research']['storage'],dict_recruit[players[1]]['research']['range'],dict_recruit[players[1]]['research']['move'])
-    lim_storage = min(dict_recruit[players[1]]['research']['regeneration'],dict_recruit[players[1]]['research']['range'],dict_recruit[players[1]]['research']['move'])
-    lim_range = 2 + min(dict_recruit[players[1]]['research']['storage'],dict_recruit[players[1]]['research']['regeneration'],dict_recruit[players[1]]['research']['move'])
-    lim_move = 2 + min(dict_recruit[players[1]]['research']['storage'],dict_recruit[players[1]]['research']['range'],dict_recruit[players[1]]['research']['regeneration'])
-    #check if  ther is two ally tanker
-    if dict_memory['data']['ally_tanker'] > 2 :
-        #see wich upgrade need to be made
-        if (dict_recruit[players[1]]['research']['regeneration'])<5 and dict_recruit[players[1]]['research']['regeneration']<lim_regen and
-            (dict_army[player[1]]['hub']['current_energy']) >= 750  :
+    lim_regen = 2 + min(dict_recruit[players[1]]['research']['storage'], dict_recruit[players[1]]
+                        ['research']['range'], dict_recruit[players[1]]['research']['move'])
+    lim_storage = min(dict_recruit[players[1]]['research']['regeneration'], dict_recruit[players[1]]
+                      ['research']['range'], dict_recruit[players[1]]['research']['move'])
+    lim_range = 2 + min(dict_recruit[players[1]]['research']['storage'], dict_recruit[players[1]]
+                        ['research']['regeneration'], dict_recruit[players[1]]['research']['move'])
+    lim_move = 2 + min(dict_recruit[players[1]]['research']['storage'], dict_recruit[players[1]]
+                       ['research']['range'], dict_recruit[players[1]]['research']['regeneration'])
+    # check if  ther is two ally tanker
+    if dict_memory['data']['ally_tanker'] >= 2:
+        # see wich upgrade need to be made
+        if (dict_recruit[players[1]]['research']['regeneration']) < 5 and dict_recruit[players[1]]['research']['regeneration'] < lim_regen and (dict_army[players[1]]['hub']['current_energy']) >= 750:
             upgrade_orders = 'upgrade:regeneration'
             return upgrade_orders
-        elif (dict_recruit[players[1]]['research']['storage'])<3 and dict_recruit[players[1]]['research']['storage']<lim_storage and
-            (dict_army[player[1]]['hub']['current_energy']) >= 600 :
+        elif (dict_recruit[players[1]]['research']['storage']) < 3 and dict_recruit[players[1]]['research']['storage'] < lim_storage and (dict_army[players[1]]['hub']['current_energy']) >= 600:
             upgrade_orders = 'upgrade:storage'
             return upgrade_orders
-        elif (dict_recruit[players[1]]['research']['move'])<5 and dict_recruit[players[1]]['research']['move']<lim_move and
-            (dict_army[player[1]]['hub']['current_energy']) >= 500 :
+        elif (dict_recruit[players[1]]['research']['move']) < 5 and dict_recruit[players[1]]['research']['move'] < lim_move and (dict_army[players[1]]['hub']['current_energy']) >= 500:
             upgrade_orders = 'upgrade:move'
             return upgrade_orders
-        elif (dict_recruit[players[1]]['research']['range'])<5 and dict_recruit[players[1]]['research']['range']<lim_range and
-            (dict_army[player[1]]['hub']['current_energy']) >= 400 :
+        elif (dict_recruit[players[1]]['research']['range']) < 5 and dict_recruit[players[1]]['research']['range'] < lim_range and (dict_army[players[1]]['hub']['current_energy']) >= 400:
             upgrade_orders = 'upgrade:range'
             return upgrade_orders
+        else:
+            return upgrade_orders
+    else:
+        return upgrade_orders
 
 
 def analyse_attack(dict_army, dict_board, players):
@@ -258,7 +265,8 @@ def analyse_attack(dict_army, dict_board, players):
                     # take 1/4 of the energy as damage
                     damage = dict_army[players[1]][shooter]['current_energy']
                     damage = (damage // 10) / 4
-                    attack_orders += " %s:*%d-%d=%d " % (shooter, x_target, y_target, damage)
+                    attack_orders += " %s:*%d-%d=%d " % (
+                        shooter, x_target, y_target, damage)
     print(attack_orders)
     return attack_orders
 
@@ -271,7 +279,9 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players
     dict_army: dictionnary with the unit of the two player(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
     players: names of the players(tuple)
-    TODO specification: dict_peaks,dict_ennemy_cruise
+    dict_peaks: dictionnary with all the peaks locations(dict)
+    dict_enemy_cruisers: dictionnary with all the enemy cruisers locations(dict)
+
     return
     ------
     move_units : movements made by ia (str)
@@ -304,7 +314,7 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players
                     case_cruiser = dict_enemy_cruisers[cruiser]['case']
                     move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
 
-    return (move_units)
+    return move_units
 
 
 def analyse_transfer(dict_army, dict_board, dict_peaks, players):
@@ -320,9 +330,16 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, players):
     implementation:  François Bechet (v.1  29/04/20)
 
     """
+
+    #transfer_orders += alpha:>alpha
+    #transfer_orders += alpha:<5-18
+    #transfer_orders += alpha:>hub
+
+
+    transfer_orders = ''
     from equest_namur_gr_50 import compute_manhattan_distance
     # check if there's a tanker near a peak
-    """ for unit in dict_army[players[1]]:
+    for unit in dict_army[players[1]]:
         if unit != 'hub' and dict_army[
                 players[1]][unit]['ship_type'] == 'tanker':
             for case in dict_board:
@@ -331,8 +348,20 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, players):
                     peak = find_nearest_peak(dict_peaks, case)
                     case_peak = dict_peaks[peak]['case']
 
-                    compute_manhattan_distance([x_shooter], [y_shooter], [x_target], [y_target]) """
+                    print(case_peak)
+                    case_peak = case_peak.split('-')
+                    x_target = int(case_peak[0].strip('@'))
+                    y_target = int(case_peak[1])
 
+                    print(case)
+                    case = case.split('-')
+                    x_shooter = int(case[0].strip('@'))
+                    y_shooter = int(case[1])
+
+                    if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                        transfer_orders += " %s:<%i-%i " % (unit, x_target, y_target)
+
+    return transfer_orders
     # determine if the tanker is near a peak
 
 
@@ -343,6 +372,10 @@ def go_to(case_0, case_1):
     ----------
     case_0: case of current position(str)
     case_1: case of destination(str)
+
+    return
+    -------
+    case: case location to go to(str)
 
     specification: François Bechet (v.1 28/04/20)
     implementation: François Bechet (v.1 28/04/20)
@@ -371,7 +404,7 @@ def go_to(case_0, case_1):
             case_0_y = case_0_y + 1
 
     case = ("@%i-%i") % (case_0_x, case_0_y)
-    return (case)
+    return case
 
 
 def find_nearest_peak(dict_peaks, case):
@@ -384,7 +417,7 @@ def find_nearest_peak(dict_peaks, case):
     x_target: coordinate x of the target(int)
     y_target: coordinate y of the target(int)
 
-    Return
+    return
     ------
     distance: distance between the cruiser and the target(int)
 
@@ -420,7 +453,7 @@ def find_nearest_cruiser(dict_enemy_cruisers, case):
     x_target: coordinate x of the target(int)
     y_target: coordinate y of the target(int)
 
-    Return
+    return
     ------
     distance: distance between the cruiser and the target(int)
 
