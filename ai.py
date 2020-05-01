@@ -43,8 +43,8 @@ def ai_play(dict_army,
         dict_army, dict_board, dict_memory, players)[2]
     # determine move orders
     orders += analyse_move(dict_army, dict_board,
-                           dict_peaks, dict_enemy_cruisers, players)
-    orders += analyse_transfer(dict_army, dict_board, dict_peaks, players)
+                           dict_peaks, dict_enemy_cruisers,dict_memory, players)
+    orders += analyse_transfer(dict_army, dict_board, dict_peaks,dict_memory, players)
 
     print(orders)
     return orders
@@ -112,6 +112,16 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
                 dict_board[case]['peak']['energy']
             })
             i += 1
+
+    # verify that the orders are still valid
+    wrong_orders = []
+    for unit in dict_memory['orders']:
+        if dict_memory['orders'][unit] not in dict_peaks:
+            wrong_orders.append(unit)
+    if wrong_orders != []:
+        dict_memory['orders'].pop(unit)
+
+    #TODO delete dead units 
 
     # determine enemy cruisers positions
     dict_enemy_cruisers = {}
@@ -259,6 +269,7 @@ def analyse_attack(dict_army, dict_board, players):
                             case = key.split('-')
                             case_0 = case[0].strip('@')
                             x_target, y_target = int(case_0), int(case[1])
+                print(x_shooter, y_shooter, x_target, y_target)
                 # check if the range is correct
                 if compute_manhattan_distance(x_shooter, y_shooter, x_target,
                                               y_target, shooting_range):
@@ -271,7 +282,7 @@ def analyse_attack(dict_army, dict_board, players):
     return attack_orders
 
 
-def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players):
+def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_memory, players):
     """analyse the game too know where  the unit needs to go
 
     parameters
@@ -292,16 +303,72 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players
 
     """
     move_units = ''
+    # if tanker energy_capacity <= 50% and there are still peaks on the map
     # move tankers to the nearest peak
+
+    print(dict_army)
     for unit in dict_army[players[1]]:
         if unit != 'hub' and dict_army[
                 players[1]][unit]['ship_type'] == 'tanker':
-            for case in dict_board:
-                if players[1] in dict_board[case] and unit in dict_board[case][
-                        players[1]]:
-                    peak = find_nearest_peak(dict_peaks, case)
-                    case_peak = dict_peaks[peak]['case']
-                    move_units += " %s:%s " % (unit, go_to(case, case_peak))
+            # check that the tanker doesn't already have an order
+            if unit not in dict_memory['orders']:
+                for case in dict_board:
+                    if players[1] in dict_board[case] and unit in dict_board[case][
+                            players[1]]:
+                        # if tanker energy < 50% -> find energy
+                        if dict_army[players[1]][unit]['current_energy'] / dict_army[players[1]][unit]['energy_capacity'] < 50 / 100:
+                            # move tankers to the nearest peak
+                            if dict_peaks != {}:
+                                peak = find_nearest_peak(dict_peaks, case)
+                                case_peak = dict_peaks[peak]['case']
+                                move_units += " %s:%s " % (unit, go_to(case, case_peak))
+                                dict_memory['orders'].update({unit: peak})
+                            # move tankers to the hub
+                            else:
+                                for case_hub in dict_board:
+                                    if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
+                                        move_units += " %s:%s " % (unit, go_to(case, case_hub))
+                                        dict_memory['orders'].update({unit: 'hub'})
+                        # move tankers to the nearest cruiser
+                        else:
+                            # if cruiser < 1/4 -> cruisers
+                            """  for unit in dict_army[players[1]]:
+                                if unit != 'hub' and dict_army[
+                                    players[1]][unit]['ship_type'] == 'cruiser':
+                                    if dict_army[players[1]][unit]['current_capacity'] // dict_army[players[1]][unit]['energy_capacity'] < 50/100:
+                                        case_cruiser = dict_board[] # TODO find cruiser position and go to it """
+                            # if hub < 1/2 -> hub
+                            for unit_hub in dict_army[players[1]]:
+                                if unit_hub == 'hub' and dict_army[players[1]]['hub']['current_energy'] / dict_army[players[1]]['hub']['energy_capacity'] < 50 / 100:
+                                    # find hub position
+                                    for case_hub in dict_board:
+                                        if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
+                                            move_units += " %s:%s " % (unit, go_to(case, case_hub))
+                                            dict_memory['orders'].update({unit: 'hub'})
+
+                            
+                            # if cruisers < 3/4 -> cruisers
+                           
+                            # else -> hub
+
+            # if the tanker already has an order and the order is still valid, continue to execute it
+            else:
+                for case in dict_board:
+                    if players[1] in dict_board[case] and unit in dict_board[case][
+                            players[1]]:
+                        order = dict_memory['orders'][unit]
+                        # peak order
+                        if 'peak' in order:
+                            case_peak = dict_peaks[order]['case']
+                            move_units += " %s:%s " % (unit, go_to(case, case_peak))
+                        # hub order
+                        elif 'hub' in order:
+                            # find hub position
+                            for case_hub in dict_board:
+                                if players[1] in dict_board[case_hub] and unit in dict_board[case_hub][players[1]]:
+                                    move_units += " %s:%s " % (unit, go_to(case, case_hub))
+                        # cruiser order
+
 
     # move cruisers to the nearest enemy cruiser
     for unit in dict_army[players[1]]:
@@ -317,7 +384,7 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, players
     return move_units
 
 
-def analyse_transfer(dict_army, dict_board, dict_peaks, players):
+def analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players):
     """analyse the game to know where is energy needed and who can carry it
 
     parameters
@@ -335,35 +402,56 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, players):
     #transfer_orders += alpha:<5-18
     #transfer_orders += alpha:>hub
 
-
     transfer_orders = ''
     from equest_namur_gr_50 import compute_manhattan_distance
-    # check if there's a tanker near a peak
+
+    print(dict_memory)
     for unit in dict_army[players[1]]:
         if unit != 'hub' and dict_army[
                 players[1]][unit]['ship_type'] == 'tanker':
             for case in dict_board:
                 if players[1] in dict_board[case] and unit in dict_board[case][
-                        players[1]]:
-                    peak = find_nearest_peak(dict_peaks, case)
-                    case_peak = dict_peaks[peak]['case']
+                        players[1]] and unit in dict_memory['orders']:
+                    # check the order assigned to the tanker
+                    order = dict_memory['orders'][unit]
+                    
+                    if 'peak' in order:
+                        peak = find_nearest_peak(dict_peaks, case)
+                        case_peak = dict_peaks[peak]['case']
 
-                    print(case_peak)
-                    case_peak = case_peak.split('-')
-                    x_target = int(case_peak[0].strip('@'))
-                    y_target = int(case_peak[1])
+                        case = case.split('-')
+                        x_shooter = int(case[0].strip('@'))
+                        y_shooter = int(case[1])
 
-                    print(case)
-                    case = case.split('-')
-                    x_shooter = int(case[0].strip('@'))
-                    y_shooter = int(case[1])
+                        case_peak = case_peak.split('-')
+                        x_target = int(case_peak[0].strip('@'))
+                        y_target = int(case_peak[1])
 
-                    if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
-                        transfer_orders += " %s:<%i-%i " % (unit, x_target, y_target)
+                        if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                            transfer_orders += " %s:<%i-%i " % (unit, x_target, y_target)
+                            # clean dict_memory
+                            dict_memory['orders'].pop(unit)
+
+                    elif 'hub' in order:
+                        for case_hub in dict_board:
+                            if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
+
+                                case = case.split('-')
+                                x_shooter = int(case[0].strip('@'))
+                                y_shooter = int(case[1])
+
+                                case_hub = case_hub.split('-')
+                                x_target = int(case[0].strip('@'))
+                                y_target = int(case[1])
+                                if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                                    transfer_orders += " %s:>hub " % (unit)
+                                    # clean dict_memory
+                                    dict_memory['orders'].pop(unit)
 
     return transfer_orders
-    # determine if the tanker is near a peak
 
+
+#def radar(dict_board, case):
 
 def go_to(case_0, case_1):
     """move from case_0 to case_1
@@ -426,6 +514,7 @@ def find_nearest_peak(dict_peaks, case):
     specification: François Bechet (v.1 28/04/20)
     implementation: François Bechet (v.1 28/04/20)
     """
+    print(case)
     case = case.split('-')
     case_x = case[0].strip('@')
     case_y = case[1]

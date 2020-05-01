@@ -12,7 +12,8 @@ def game(board_path,
          remote_id='ai',
          remote_ip='127.0.0.1',
          local_ai=False,
-         colored_display=True, play_game = True):
+         colored_display=True,
+         play_game=True):
     """start the game and play it
     paramater
     ---------
@@ -128,9 +129,10 @@ def game(board_path,
     #     except Exception:
     #         print("One of the players entered a bad order")
     while play_game:
-        peace,play_game = play_turn(dict_board, dict_army, dict_recruit, dict_memory,
-                          width, height, players, peace, connection,
-                          colored_display, play_game)
+        peace, play_game = play_turn(dict_board, dict_army, dict_recruit,
+                                     dict_memory, width, height, players,
+                                     peace, connection, colored_display,
+                                     play_game)
 
 
 def create_board(board_file, players):
@@ -241,7 +243,7 @@ def display_board(dict_board, height, width, players, dict_army,
     # define colored colors
     if colored_display:
         default_color = colored.attr('reset')
-        green = colored.fg('#00ff00')
+        green = colored.fg('#00bb00')
         red = colored.fg('#ff0000')
         gold = colored.fg('#ffbd00')
         blue = colored.bg('#006994')
@@ -481,7 +483,8 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
         play_game = False
     else:
         move(dict_order, dict_board, height, width, dict_army, players)
-        energy_transfert(dict_army, dict_order, dict_board, height, width, players)
+        energy_transfert(dict_army, dict_order, dict_board, height, width,
+                         players)
         regenerate(dict_army, players)
         display_board(dict_board, height, width, players, dict_army,
                       colored_display)
