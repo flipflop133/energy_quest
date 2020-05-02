@@ -858,6 +858,7 @@ def attack(dict_order, dict_army, dict_board, height, width, players, peace):
                         attackList[0]]['ship_type'] == 'cruiser':
                     dict_army[attacker][attackList[0]]['turn_attack'] = True
 
+    for player in players:
         # delete the unit if damage is >= unit hp
         dead_units = []
         for ship in dict_army[player]:
