@@ -117,12 +117,32 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
                     dict_enemy_cruisers[unit] = ({'case': case})
 
     print(dict_enemy_cruisers)
-    
+    wrong_orders = []
     # TODO -> delete orders if a tanker want to go on a dead cruiser
+    for order in dict_memory['orders']:
+        order = order.split(:)
+        tanker = order[0]
+        cruiser = order[1]
+        order = " %s:%s " % (tanker,cruiser)
+        if dict_army[players[1]][tanker]['ship_type'] =='tanker':
+            if dict_army[players[1]][cruiser]['hp'] <= 0 or cruiser not in dict_army[players[1]]:
+                wrong_orders.append(order)
+
+        
+
     # TODO -> delete orders if a cruiser want to go on a dead enemy cruiser
+    for order in dict_memory['orders']:
+        order = order.split(:)
+        ia_cruiser = order[0]
+        player_cruiser = order[1]
+        order = " %s:%s " % (ia_cruiser,player_cruiser)
+        if dict_army[players[1]][tanker]['ship_type'] =='cruiser':
+            if dict_army[players[0]][player_cruiser]['hp'] <= 0 or player_cruiser not in dict_army[players[0]]:
+                wrong_orders.append(order)
+
     # verify that the orders are still valid
     # verify that the peak still exist
-    wrong_orders = []
+
     for unit in dict_memory['orders']:
         print(dict_memory['orders'][unit])
         if dict_memory['orders'][unit] in dict_enemy_cruisers:
