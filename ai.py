@@ -43,7 +43,7 @@ def ai_play(dict_army,
         dict_army, dict_board, dict_memory, players)[2]
     # determine move orders
     orders += analyse_move(dict_army, dict_board,
-                           dict_peaks, dict_enemy_cruisers,dict_memory, players)
+                           dict_peaks, dict_enemy_cruisers, dict_memory, players)
     orders += analyse_transfer(dict_army, dict_board, dict_peaks,dict_memory, players)
 
     print(orders)
@@ -114,14 +114,19 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
             i += 1
 
     # verify that the orders are still valid
+    # verify that the peak still exist
     wrong_orders = []
     for unit in dict_memory['orders']:
-        if dict_memory['orders'][unit] not in dict_peaks:
-            wrong_orders.append(unit)
+        if 'peak' in dict_memory['orders'][unit]:
+            if dict_memory['orders'][unit] not in dict_peaks:
+                wrong_orders.append(unit)
     if wrong_orders != []:
-        dict_memory['orders'].pop(unit)
+        for unit in wrong_orders:
+            dict_memory['orders'].pop(unit)
 
-    #TODO delete dead units 
+    # verify that
+
+    #TODO delete dead units
 
     # determine enemy cruisers positions
     dict_enemy_cruisers = {}
@@ -193,6 +198,7 @@ def analyse_upgrade(dict_army, dict_memory, dict_recruit, players):
 
     """
     upgrade_orders = ''
+    #TODO # OPTIMIZE:
     lim_regen = 2 + min(dict_recruit[players[1]]['research']['storage'], dict_recruit[players[1]]
                         ['research']['range'], dict_recruit[players[1]]['research']['move'])
     lim_storage = min(dict_recruit[players[1]]['research']['regeneration'], dict_recruit[players[1]]
@@ -241,11 +247,7 @@ def analyse_attack(dict_army, dict_board, players):
     """
     attack_orders = ""
     from equest_namur_gr_50 import compute_manhattan_distance
-    x_shooter = 0
-    y_shooter = 0
-    x_target = 0
-    y_target = 0
-    shooting_range = 0
+    x_shooter, y_shooter, x_target, y_target, shooting_range = 0, 0, 0, 0, 0
     # pick a unit from army
     for shooter in dict_army[players[1]]:
         # check if it is a cruiser
@@ -255,9 +257,7 @@ def analyse_attack(dict_army, dict_board, players):
                 if players[1] in value:
                     unit = value[players[1]]
                     if shooter in unit:
-                        case = key.split('-')
-                        case_0 = case[0].strip('@')
-                        x_shooter, y_shooter = int(case_0), int(case[1])
+                        x_shooter, y_shooter = case_into_pos(key)
             # pick its shooting_range
             shooting_range = dict_army[players[1]][shooter]['shooting_range']
             # pick the coordinate of a possible target
@@ -266,9 +266,7 @@ def analyse_attack(dict_army, dict_board, players):
                     if players[0] in value:
                         unit = value[players[0]]
                         if target in unit:
-                            case = key.split('-')
-                            case_0 = case[0].strip('@')
-                            x_target, y_target = int(case_0), int(case[1])
+                            x_target, y_target = case_into_pos(key)
                 print(x_shooter, y_shooter, x_target, y_target)
                 # check if the range is correct
                 if compute_manhattan_distance(x_shooter, y_shooter, x_target,
@@ -278,7 +276,6 @@ def analyse_attack(dict_army, dict_board, players):
                     damage = (damage // 10) / 4
                     attack_orders += " %s:*%d-%d=%d " % (
                         shooter, x_target, y_target, damage)
-    print(attack_orders)
     return attack_orders
 
 
@@ -306,7 +303,7 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
     # if tanker energy_capacity <= 50% and there are still peaks on the map
     # move tankers to the nearest peak
 
-    print(dict_army)
+    print(dict_memory)
     for unit in dict_army[players[1]]:
         if unit != 'hub' and dict_army[
                 players[1]][unit]['ship_type'] == 'tanker':
@@ -319,7 +316,7 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                         if dict_army[players[1]][unit]['current_energy'] / dict_army[players[1]][unit]['energy_capacity'] < 50 / 100:
                             # move tankers to the nearest peak
                             if dict_peaks != {}:
-                                peak = find_nearest_peak(dict_peaks, case)
+                                peak = find_nearest_entity(dict_peaks, case)
                                 case_peak = dict_peaks[peak]['case']
                                 move_units += " %s:%s " % (unit, go_to(case, case_peak))
                                 dict_memory['orders'].update({unit: peak})
@@ -328,15 +325,19 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                                 for case_hub in dict_board:
                                     if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
                                         move_units += " %s:%s " % (unit, go_to(case, case_hub))
-                                        dict_memory['orders'].update({unit: 'hub'})
+                                        dict_memory['orders'].update({unit: 'receiving_hub'})
                         # move tankers to the nearest cruiser
                         else:
                             # if cruiser < 1/4 -> cruisers
-                            """  for unit in dict_army[players[1]]:
-                                if unit != 'hub' and dict_army[
-                                    players[1]][unit]['ship_type'] == 'cruiser':
-                                    if dict_army[players[1]][unit]['current_capacity'] // dict_army[players[1]][unit]['energy_capacity'] < 50/100:
-                                        case_cruiser = dict_board[] # TODO find cruiser position and go to it """
+                            for unit_cruiser in dict_army[players[1]]:
+                                if unit_cruiser != 'hub' and dict_army[
+                                    players[1]][unit_cruiser]['ship_type'] == 'cruiser':
+                                    # check cruiser energy
+                                    if dict_army[players[1]][unit_cruiser]['current_energy'] / dict_army[players[1]][unit_cruiser]['energy_capacity'] < 50 / 100:
+                                        for case_cruiser in dict_board:
+                                            if players[1] in dict_board[case_cruiser] and unit_cruiser in dict_board[case_cruiser][players[1]]:
+                                                move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
+                                                dict_memory['orders'].update({unit: unit_cruiser})
                             # if hub < 1/2 -> hub
                             for unit_hub in dict_army[players[1]]:
                                 if unit_hub == 'hub' and dict_army[players[1]]['hub']['current_energy'] / dict_army[players[1]]['hub']['energy_capacity'] < 50 / 100:
@@ -346,13 +347,14 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                                             move_units += " %s:%s " % (unit, go_to(case, case_hub))
                                             dict_memory['orders'].update({unit: 'hub'})
 
-                            
+
                             # if cruisers < 3/4 -> cruisers
-                           
+
                             # else -> hub
 
             # if the tanker already has an order and the order is still valid, continue to execute it
             else:
+                print("the else")
                 for case in dict_board:
                     if players[1] in dict_board[case] and unit in dict_board[case][
                             players[1]]:
@@ -365,10 +367,14 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                         elif 'hub' in order:
                             # find hub position
                             for case_hub in dict_board:
-                                if players[1] in dict_board[case_hub] and unit in dict_board[case_hub][players[1]]:
+                                if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
                                     move_units += " %s:%s " % (unit, go_to(case, case_hub))
+                                    print(move_units, 'hellooooo')
                         # cruiser order
-
+                        else:
+                            for case_cruiser in dict_board:
+                                if players[1] in dict_board[case_cruiser] and order in dict_board[case_cruiser][players[1]]:
+                                    move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
 
     # move cruisers to the nearest enemy cruiser
     for unit in dict_army[players[1]]:
@@ -377,7 +383,7 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
             for case in dict_board:
                 if (players[1] in dict_board[case] and unit in dict_board[case][
                         players[1]]) and (dict_enemy_cruisers != {}):
-                    cruiser = find_nearest_cruiser(dict_enemy_cruisers, case)
+                    cruiser = find_nearest_entity(dict_enemy_cruisers, case)
                     case_cruiser = dict_enemy_cruisers[cruiser]['case']
                     move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
 
@@ -391,16 +397,18 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players):
     ----------
     dict_army: dictionnary with the unit of the two player(dict)
     dict_board: dictionnary with all the characteristic of the board (dict)
+    dict_peaks: dictionnary with all the peaks locations(dict)
+    dict_memory : dictionnary of order given by the ai in past turn and useful data(dict)
     players: names of the players(tuple)
+
+    return
+    ------
+    transfer_orders : ia transfer orders(str)
 
     specification: Dominik Everaert (v.1 20/04/20)
     implementation:  François Bechet (v.1  29/04/20)
 
     """
-
-    #transfer_orders += alpha:>alpha
-    #transfer_orders += alpha:<5-18
-    #transfer_orders += alpha:>hub
 
     transfer_orders = ''
     from equest_namur_gr_50 import compute_manhattan_distance
@@ -414,44 +422,51 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players):
                         players[1]] and unit in dict_memory['orders']:
                     # check the order assigned to the tanker
                     order = dict_memory['orders'][unit]
-                    
+
+                    # tanker -> peak
                     if 'peak' in order:
-                        peak = find_nearest_peak(dict_peaks, case)
+                        peak = find_nearest_entity(dict_peaks, case)
                         case_peak = dict_peaks[peak]['case']
 
-                        case = case.split('-')
-                        x_shooter = int(case[0].strip('@'))
-                        y_shooter = int(case[1])
+                        x_shooter, y_shooter = case_into_pos(case)
 
-                        case_peak = case_peak.split('-')
-                        x_target = int(case_peak[0].strip('@'))
-                        y_target = int(case_peak[1])
+                        x_target, y_target = case_into_pos(case_peak)
 
                         if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
                             transfer_orders += " %s:<%i-%i " % (unit, x_target, y_target)
                             # clean dict_memory
                             dict_memory['orders'].pop(unit)
 
+                    # tanker -> hub
                     elif 'hub' in order:
                         for case_hub in dict_board:
                             if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
 
-                                case = case.split('-')
-                                x_shooter = int(case[0].strip('@'))
-                                y_shooter = int(case[1])
+                                x_shooter, y_shooter = case_into_pos(case)
 
-                                case_hub = case_hub.split('-')
-                                x_target = int(case[0].strip('@'))
-                                y_target = int(case[1])
+                                x_target, y_target = case_into_pos(case_hub)
+
                                 if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
-                                    transfer_orders += " %s:>hub " % (unit)
+                                    if 'receiving_hub' in order:
+                                        transfer_orders += " %s:<%d-%d " % (unit, x_target, y_target)
+                                    else:
+                                        transfer_orders += " %s:>hub " % (unit)
                                     # clean dict_memory
                                     dict_memory['orders'].pop(unit)
 
+                    # tanker -> cruiser
+                    else:
+                        for case_cruiser in dict_board:
+                            if players[1] in dict_board[case_cruiser] and order in dict_board[case_cruiser][players[1]]:
+                                x_shooter, y_shooter = case_into_pos(case)
+                                x_target, y_target = case_into_pos(case_cruiser)
+                                if compute_manhattan_distance(x_shooter, y_shooter, x_target, y_target):
+                                    transfer_orders += " %s:>%s " % (unit, order)
+                                    # clean dict_memory
+                                    dict_memory['orders'].pop(unit)
     return transfer_orders
 
 
-#def radar(dict_board, case):
 
 def go_to(case_0, case_1):
     """move from case_0 to case_1
@@ -469,14 +484,10 @@ def go_to(case_0, case_1):
     implementation: François Bechet (v.1 28/04/20)
     """
     # extract x,y positions from case_0
-    case_0 = case_0.split('-')
-    case_0_x = int(case_0[0].strip('@'))
-    case_0_y = int(case_0[1])
+    case_0_x ,case_0_y = case_into_pos(case_0)
 
     # extract x,y positions from case_1
-    case_1 = case_1.split('-')
-    case_1_x = int(case_1[0].strip('@'))
-    case_1_y = int(case_1[1])
+    case_1_x, case_1_y = case_into_pos(case_1)
 
     # determine destination position
     if abs(case_0_x - case_1_x) > 1:  # don't need to be on the unit
@@ -495,15 +506,13 @@ def go_to(case_0, case_1):
     return case
 
 
-def find_nearest_peak(dict_peaks, case):
+def find_nearest_entity(dict_entities, case):
     """compute the distance between a cruiser and its target
 
     Parameters
     ----------
-    x_shooter: coordinate x of the shooter(int)
-    y_shooter: coordinate y of the shooter(int)
-    x_target: coordinate x of the target(int)
-    y_target: coordinate y of the target(int)
+    dict_entity: dictionnary with all the entities locations(dict)
+    case: case of the unit(str)
 
     return
     ------
@@ -514,55 +523,37 @@ def find_nearest_peak(dict_peaks, case):
     specification: François Bechet (v.1 28/04/20)
     implementation: François Bechet (v.1 28/04/20)
     """
-    print(case)
-    case = case.split('-')
-    case_x = case[0].strip('@')
-    case_y = case[1]
+    case_x, case_y = case_into_pos(case)
 
     dict_distance = {}
-    for peak in dict_peaks:
-        case_peak = dict_peaks[peak]['case'].split('-')
-        case_0 = case_peak[0].strip('@')
-        case_1 = case_peak[1]
+    for entity in dict_entities:
+
+        case_0, case_1 = case_into_pos(dict_entities[entity]['case'])
 
         x = abs(int(case_x) - int(case_0))
         y = abs(int(case_y) - int(case_1))
-        dict_distance[peak] = (abs(x - y))
+        dict_distance[entity] = (abs(x - y))
 
     return (min(dict_distance, key=dict_distance.get))
 
 
-def find_nearest_cruiser(dict_enemy_cruisers, case):
-    """compute the distance between a cruiser and its target
+def case_into_pos(case):
+    """change a case into coordinates of a positions
 
     Parameters
     ----------
-    x_shooter: coordinate x of the shooter(int)
-    y_shooter: coordinate y of the shooter(int)
-    x_target: coordinate x of the target(int)
-    y_target: coordinate y of the target(int)
+    case: the case to transforme(str)
 
     return
     ------
-    distance: distance between the cruiser and the target(int)
+     x: position in column
+     y: position in line
 
-    Version
-    -------
-    specification: François Bechet (v.1 28/04/20)
-    implementation: François Bechet (v.1 28/04/20)
+     specification: Dominik Everaert (v.1 1/05/20)
+     implementation: Dominik Everaert (v.1 1/05/20)
     """
     case = case.split('-')
-    case_x = case[0].strip('@')
-    case_y = case[1]
+    x = int(case[0].strip('@'))
+    y = int(case[1])
 
-    dict_distance = {}
-    for cruiser in dict_enemy_cruisers:
-        case_cruiser = dict_enemy_cruisers[cruiser]['case'].split('-')
-        case_0 = case_cruiser[0].strip('@')
-        case_1 = case_cruiser[1]
-
-        x = abs(int(case_x) - int(case_0))
-        y = abs(int(case_y) - int(case_1))
-        dict_distance[cruiser] = (abs(x - y))
-
-    return (min(dict_distance, key=dict_distance.get))
+    return x,y
