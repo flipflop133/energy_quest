@@ -44,7 +44,7 @@ def ai_play(dict_army,
     # determine move orders
     orders += analyse_move(dict_army, dict_board,
                            dict_peaks, dict_enemy_cruisers, dict_memory, players)
-    orders += analyse_transfer(dict_army, dict_board, dict_peaks,dict_memory, players)
+    orders += analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players)
 
     print(orders)
     return orders
@@ -70,12 +70,7 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
     implementation:  François Bechet (v.1  27/04/20)
     """
     # determine some stats
-    enemy_cruiser = 0
-    enemy_tanker = 0
-    ally_cruiser = 0
-    ally_tanker = 0
-    total_energy_required = 0
-    total_energy_giveable = 0
+    enemy_cruiser, enemy_tanker, ally_cruiser, ally_tanker, total_energy_required, total_energy_giveable = 0, 0, 0, 0, 0, 0
     for unit in dict_army[players[0]]:
         if dict_army[players[0]][unit]['ship_type'] == 'cruiser':
             enemy_cruiser += 1
@@ -113,21 +108,6 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
             })
             i += 1
 
-    # verify that the orders are still valid
-    # verify that the peak still exist
-    wrong_orders = []
-    for unit in dict_memory['orders']:
-        if 'peak' in dict_memory['orders'][unit]:
-            if dict_memory['orders'][unit] not in dict_peaks:
-                wrong_orders.append(unit)
-    if wrong_orders != []:
-        for unit in wrong_orders:
-            dict_memory['orders'].pop(unit)
-
-    # verify that
-
-    #TODO delete dead units
-
     # determine enemy cruisers positions
     dict_enemy_cruisers = {}
     for case, value in dict_board.items():
@@ -135,6 +115,26 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
             for unit in (dict_board[case][players[0]]):
                 if unit != 'hub':
                     dict_enemy_cruisers[unit] = ({'case': case})
+
+    print(dict_enemy_cruisers)
+    
+    # TODO -> delete orders if a tanker want to go on a dead cruiser
+    # TODO -> delete orders if a cruiser want to go on a dead enemy cruiser
+    # verify that the orders are still valid
+    # verify that the peak still exist
+    wrong_orders = []
+    for unit in dict_memory['orders']:
+        print(dict_memory['orders'][unit])
+        if dict_memory['orders'][unit] in dict_enemy_cruisers:
+            print("hlelelel")
+        # verify that the peak still exist or the cruiser still exist
+        if (('hub' not in dict_memory['orders'][unit]) and (('peak' in dict_memory['orders'][unit]) and (dict_memory['orders'][unit] not in dict_peaks))):
+            wrong_orders.append(unit)
+
+    # delete all wrong orders
+    if wrong_orders != []:
+        for unit in wrong_orders:
+            dict_memory['orders'].pop(unit)
 
     return dict_memory, dict_peaks, dict_enemy_cruisers
 
@@ -198,7 +198,6 @@ def analyse_upgrade(dict_army, dict_memory, dict_recruit, players):
 
     """
     upgrade_orders = ''
-    #TODO # OPTIMIZE:
     lim_regen = 2 + min(dict_recruit[players[1]]['research']['storage'], dict_recruit[players[1]]
                         ['research']['range'], dict_recruit[players[1]]['research']['move'])
     lim_storage = min(dict_recruit[players[1]]['research']['regeneration'], dict_recruit[players[1]]
@@ -326,35 +325,44 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                                     if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
                                         move_units += " %s:%s " % (unit, go_to(case, case_hub))
                                         dict_memory['orders'].update({unit: 'receiving_hub'})
-                        # move tankers to the nearest cruiser
+                        # if tanker energy > 50% -> give energy to the hub or to the cruisers
                         else:
-                            # if cruiser < 1/4 -> cruisers
-                            for unit_cruiser in dict_army[players[1]]:
-                                if unit_cruiser != 'hub' and dict_army[
-                                    players[1]][unit_cruiser]['ship_type'] == 'cruiser':
-                                    # check cruiser energy
-                                    if dict_army[players[1]][unit_cruiser]['current_energy'] / dict_army[players[1]][unit_cruiser]['energy_capacity'] < 50 / 100:
-                                        for case_cruiser in dict_board:
-                                            if players[1] in dict_board[case_cruiser] and unit_cruiser in dict_board[case_cruiser][players[1]]:
-                                                move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
-                                                dict_memory['orders'].update({unit: unit_cruiser})
-                            # if hub < 1/2 -> hub
-                            for unit_hub in dict_army[players[1]]:
-                                if unit_hub == 'hub' and dict_army[players[1]]['hub']['current_energy'] / dict_army[players[1]]['hub']['energy_capacity'] < 50 / 100:
+                            for second_unit in dict_army[players[1]]:
+                                # if cruiser energy < 1/4 -> cruisers
+                                if (second_unit != 'hub' and dict_army[
+                                    players[1]][second_unit]['ship_type'] == 'cruiser') and (dict_army[players[1]][second_unit]['current_energy'] / dict_army[players[1]][second_unit]['energy_capacity'] < 25 / 100):
+                                    for case_cruiser in dict_board:
+                                        if players[1] in dict_board[case_cruiser] and second_unit in dict_board[case_cruiser][players[1]]:
+                                            move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
+                                            dict_memory['orders'].update({unit: second_unit})
+                                            print('working')
+
+                                # if hub energy < 1/2 -> hub
+                                if second_unit == 'hub' and dict_army[players[1]]['hub']['current_energy'] / dict_army[players[1]]['hub']['energy_capacity'] < 50 / 100:
                                     # find hub position
                                     for case_hub in dict_board:
                                         if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
                                             move_units += " %s:%s " % (unit, go_to(case, case_hub))
                                             dict_memory['orders'].update({unit: 'hub'})
 
+                                # if cruisers < 3/4 -> cruisers
+                                if (second_unit != 'hub' and dict_army[
+                                    players[1]][second_unit]['ship_type'] == 'cruiser') and (dict_army[players[1]][second_unit]['current_energy'] / dict_army[players[1]][second_unit]['energy_capacity'] < 75 / 100):
+                                    for case_cruiser in dict_board:
+                                        if players[1] in dict_board[case_cruiser] and second_unit in dict_board[case_cruiser][players[1]]:
+                                            move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
+                                            dict_memory['orders'].update({unit: second_unit})
 
-                            # if cruisers < 3/4 -> cruisers
-
-                            # else -> hub
+                                # else -> hub
+                                if second_unit == 'hub' and dict_army[players[1]]['hub']['current_energy'] / dict_army[players[1]]['hub']['energy_capacity'] < 75 / 100:
+                                    # find hub position
+                                    for case_hub in dict_board:
+                                        if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
+                                            move_units += " %s:%s " % (unit, go_to(case, case_hub))
+                                            dict_memory['orders'].update({unit: 'hub'})
 
             # if the tanker already has an order and the order is still valid, continue to execute it
             else:
-                print("the else")
                 for case in dict_board:
                     if players[1] in dict_board[case] and unit in dict_board[case][
                             players[1]]:
@@ -369,7 +377,6 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                             for case_hub in dict_board:
                                 if players[1] in dict_board[case_hub] and 'hub' in dict_board[case_hub][players[1]]:
                                     move_units += " %s:%s " % (unit, go_to(case, case_hub))
-                                    print(move_units, 'hellooooo')
                         # cruiser order
                         else:
                             for case_cruiser in dict_board:
@@ -484,7 +491,7 @@ def go_to(case_0, case_1):
     implementation: François Bechet (v.1 28/04/20)
     """
     # extract x,y positions from case_0
-    case_0_x ,case_0_y = case_into_pos(case_0)
+    case_0_x, case_0_y = case_into_pos(case_0)
 
     # extract x,y positions from case_1
     case_1_x, case_1_y = case_into_pos(case_1)
@@ -556,4 +563,4 @@ def case_into_pos(case):
     x = int(case[0].strip('@'))
     y = int(case[1])
 
-    return x,y
+    return x, y
