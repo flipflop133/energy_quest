@@ -440,7 +440,7 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
     win_condition = attack(dict_order, dict_army, dict_board, height, width,
                            players, peace)
     if win_condition[0] == 'win':
-        print('the winner is %s' % win_condition[1])
+        print('The winner is %s!' % win_condition[1])
         if 'ai' not in players[1]:
             remote_play.close_connection(connection)
         play_game = False
@@ -671,7 +671,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                         dict_recruit[player]['research']['regeneration'] += 1
                     else:
                         print(player +
-                              " you can't upgrade energy regeneration")
+                              ", you can't upgrade energy regeneration.")
 
                 elif upgradeList[1] == 'storage':
                     if (dict_army[player]['hub']['current_energy']
@@ -691,7 +691,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                                 dict_army[player][
                                     temp_dict[i]]['energy_capacity'] += 100
                     else:
-                        print(player + " you can't upgrade energy capacity")
+                        print(player + ", you can't upgrade energy capacity.")
 
                 elif upgradeList[1] == 'range':
                     if (dict_army[player]['hub']['current_energy']
@@ -710,7 +710,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                                 dict_army[player][
                                     temp_dict[i]]['shooting_range'] += 1
                     else:
-                        print(player + " you can't upgrade shooting range")
+                        print(player + ", you can't upgrade shooting range.")
 
                 elif upgradeList[1] == 'move':
                     if (dict_army[player]['hub']['current_energy']
@@ -728,7 +728,7 @@ def upgrade(dict_order, dict_army, dict_recruit, players):
                                 dict_army[player][
                                     temp_dict[i]]['move_cost'] -= 1
                     else:
-                        print(player + " you can't upgrade movement")
+                        print(player + ", you can't upgrade movement.")
 
     return dict_army, dict_recruit
 
@@ -831,7 +831,6 @@ def attack(dict_order, dict_army, dict_board, height, width, players, peace):
         # delete the unit if damage is >= unit hp
         dead_units = []
         for ship in dict_army[player]:
-            print(dict_army[player][ship]['hp'])
             if dict_army[player][ship]['hp'] <= 0:
                 # if the unit is the hub -> the attacker win
                 if ship == 'hub':
