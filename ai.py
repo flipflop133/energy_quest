@@ -115,35 +115,23 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
                 if unit != 'hub':
                     dict_enemy_cruisers[unit] = ({'case': case})
 
+    # check if orders are still valid
     wrong_orders = []
-    # delete orders if a tanker want to go on a dead cruiser
     print(dict_memory)
     for unit, order in dict_memory['orders'].items():
-        tanker = unit
-        cruiser = order
-        if dict_army[players[1]][tanker]['ship_type'] == 'tanker' and 'peak' not in cruiser and 'hub' not in cruiser:
-            if dict_army[players[1]][cruiser]['hp'] <= 0 or cruiser not in dict_army[players[1]]:
-                wrong_orders.append(unit)
+        if (
+            # delete orders if a tanker want to go on a dead cruiser
+            (dict_army[players[1]][unit]['ship_type'] == 'tanker' and 'peak' not in order and 'hub' not in order) and
+            (dict_army[players[1]][order]['hp'] <= 0 or order not in dict_army[players[1]]) or
 
-        
+            # delete orders if a cruiser want to go on a dead enemy cruiser
+            (dict_army[players[1]][unit]['ship_type'] == 'cruiser' and 'peak' not in order and 'hub' not in order) and
+            (dict_army[players[0]][order]['hp'] <= 0 or unit not in dict_army[players[0]]) or
 
-    # delete orders if a cruiser want to go on a dead enemy cruiser
-    for unit, order in dict_memory['orders'].items():
-        unit = order[0]
-        cruiser = order[1]
-        if dict_army[players[1]][tanker]['ship_type'] == 'cruiser' and 'peak' not in cruiser and 'hub' not in cruiser:
-            if dict_army[players[0]][cruiser]['hp'] <= 0 or unit not in dict_army[players[0]]:
-                wrong_orders.append(unit)
-
-    # verify that the orders are still valid
-    # verify that the peak still exist
-
-    for unit in dict_memory['orders']:
-        print(dict_memory['orders'][unit])
-        if dict_memory['orders'][unit] in dict_enemy_cruisers:
-            print("hlelelel")
-        # verify that the peak still exist or the cruiser still exist
-        if (('hub' not in dict_memory['orders'][unit]) and (('peak' in dict_memory['orders'][unit]) and (dict_memory['orders'][unit] not in dict_peaks))):
+            # verify that the peak still exist
+            (('hub' not in dict_memory['orders'][unit]) and (('peak' in dict_memory['orders'][unit]) and
+            (dict_memory['orders'][unit] not in dict_peaks)))
+        ):
             wrong_orders.append(unit)
 
     # delete all wrong orders
@@ -487,7 +475,6 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players):
                                     # clean dict_memory
                                     dict_memory['orders'].pop(unit)
     return transfer_orders
-
 
 
 def go_to(case_0, case_1):

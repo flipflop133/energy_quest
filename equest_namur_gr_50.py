@@ -42,66 +42,36 @@ def game(board_path,
         players[0] = 'ai'
 
     # create dict_recruit
-    dict_recruit = {
-        players[0]: {
-            'cruiser': {
-                'ship_type': 'cruiser',
-                'hp': 100,
-                'current_energy': 400,
-                'energy_capacity': 400,
-                'shooting_range': 1,
-                'move_cost': 10,
-                'shooting_cost': 10,
-                'cost': 750,
-                'turn_attack': False,
-                'move': False
-            },
-            'tanker': {
-                'ship_type': 'tanker',
-                'hp': 50,
-                'current_energy': 600,
-                'energy_capacity': 600,
-                'move_cost': 0,
-                'cost': 1000,
-                'move': False
-            },
-            'research': {
-                'regeneration': 0,
-                'storage': 0,
-                'range': 0,
-                'move': 0
-            }
+    temp_dict = {
+        'cruiser': {
+            'ship_type': 'cruiser',
+            'hp': 100,
+            'current_energy': 400,
+            'energy_capacity': 400,
+            'shooting_range': 1,
+            'move_cost': 10,
+            'shooting_cost': 10,
+            'cost': 750,
+            'turn_attack': False,
+            'move': False
         },
-        players[1]: {
-            'cruiser': {
-                'ship_type': 'cruiser',
-                'hp': 100,
-                'current_energy': 400,
-                'energy_capacity': 400,
-                'shooting_range': 1,
-                'move_cost': 10,
-                'shooting_cost': 10,
-                'cost': 750,
-                'turn_attack': False,
-                'move': False
-            },
-            'tanker': {
-                'ship_type': 'tanker',
-                'hp': 50,
-                'current_energy': 600,
-                'energy_capacity': 600,
-                'move_cost': 0,
-                'cost': 1000,
-                'move': False
-            },
-            'research': {
-                'regeneration': 0,
-                'storage': 0,
-                'range': 0,
-                'move': 0
-            }
+        'tanker': {
+            'ship_type': 'tanker',
+            'hp': 50,
+            'current_energy': 600,
+            'energy_capacity': 600,
+            'move_cost': 0,
+            'cost': 1000,
+            'move': False
+        },
+        'research': {
+            'regeneration': 0,
+            'storage': 0,
+            'range': 0,
+            'move': 0
         }
     }
+    dict_recruit = {players[0]: temp_dict, players[1]: temp_dict}
 
     # create dict_memory for the ai
     dict_memory = {'orders': {}, 'data': {}}
