@@ -46,7 +46,6 @@ def ai_play(dict_army,
                            dict_peaks, dict_enemy_cruisers, dict_memory, players)
     orders += analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players)
 
-    print(orders)
     return orders
 
 
@@ -116,29 +115,25 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
                 if unit != 'hub':
                     dict_enemy_cruisers[unit] = ({'case': case})
 
-    print(dict_enemy_cruisers)
     wrong_orders = []
-    # TODO -> delete orders if a tanker want to go on a dead cruiser
-    for order in dict_memory['orders']:
-        order = order.split(:)
-        tanker = order[0]
-        cruiser = order[1]
-        order = " %s:%s " % (tanker,cruiser)
-        if dict_army[players[1]][tanker]['ship_type'] =='tanker':
+    # delete orders if a tanker want to go on a dead cruiser
+    print(dict_memory)
+    for unit, order in dict_memory['orders'].items():
+        tanker = unit
+        cruiser = order
+        if dict_army[players[1]][tanker]['ship_type'] == 'tanker' and 'peak' not in cruiser and 'hub' not in cruiser:
             if dict_army[players[1]][cruiser]['hp'] <= 0 or cruiser not in dict_army[players[1]]:
-                wrong_orders.append(order)
+                wrong_orders.append(unit)
 
         
 
-    # TODO -> delete orders if a cruiser want to go on a dead enemy cruiser
-    for order in dict_memory['orders']:
-        order = order.split(:)
-        ia_cruiser = order[0]
-        player_cruiser = order[1]
-        order = " %s:%s " % (ia_cruiser,player_cruiser)
-        if dict_army[players[1]][tanker]['ship_type'] =='cruiser':
-            if dict_army[players[0]][player_cruiser]['hp'] <= 0 or player_cruiser not in dict_army[players[0]]:
-                wrong_orders.append(order)
+    # delete orders if a cruiser want to go on a dead enemy cruiser
+    for unit, order in dict_memory['orders'].items():
+        unit = order[0]
+        cruiser = order[1]
+        if dict_army[players[1]][tanker]['ship_type'] == 'cruiser' and 'peak' not in cruiser and 'hub' not in cruiser:
+            if dict_army[players[0]][cruiser]['hp'] <= 0 or unit not in dict_army[players[0]]:
+                wrong_orders.append(unit)
 
     # verify that the orders are still valid
     # verify that the peak still exist
