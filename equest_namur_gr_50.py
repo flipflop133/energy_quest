@@ -606,10 +606,6 @@ def recruit_units(dict_order, dict_army, players, dict_board, dict_recruit):
     implementation: François Bechet (v.1 01/03/20)
     """
 
-    # create a deepcopy of dict_recruit because otherwise it would point to
-    # the same object and cause issues later
-    dict_recruit_copy = copy.deepcopy(dict_recruit)
-
     # extract the units from dict_order and place them into dict_board and
     # dict_army
     for player in players:
@@ -622,6 +618,9 @@ def recruit_units(dict_order, dict_army, players, dict_board, dict_recruit):
                         hub_case = case
         # extract the order from dict_order
         for i in range(len(dict_order[player]['recruit'])):
+            # create a deepcopy of dict_recruit because otherwise it would point to
+            # the same object and cause issues later
+            dict_recruit_copy = copy.deepcopy(dict_recruit)
             unit = dict_order[player]['recruit'][i]
             unitList = unit.split(':')
             # check that the unit name doesn't already exists
@@ -961,7 +960,6 @@ def move(dict_order, dict_board, height, width, dict_army, players):
                         'ship_type'] == 'cruiser' and dict_army[player][
                             moveList[0]]['turn_attack']:
                     moveLegality = False
-                # check manhattan distance and moveLegality
                 # check manhattan distance and moveLegality
                 if compute_manhattan_distance(x_shooter, y_shooter, x_target,
                                               y_target) and moveLegality:
