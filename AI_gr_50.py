@@ -85,13 +85,18 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
             total_energy_giveable += dict_army[
                 players[1]][unit]['energy_capacity']
 
+    # determine enemy hub position
+    for case in dict_board:
+        if players[0] in dict_board[case] and 'hub' in dict_board[case][players[0]]:
+            enemy_hub = case
     dict_memory['data'].update({
         'enemy_cruiser': enemy_cruiser,
         'enemy_tanker': enemy_tanker,
         'ally_cruiser': ally_cruiser,
         'ally_tanker': ally_tanker,
         'total_energy_required': total_energy_required,
-        'total_energy_giveable': total_energy_giveable
+        'total_energy_giveable': total_energy_giveable,
+        'enemy_hub': enemy_hub
     })
 
     # determine peaks positions
@@ -117,7 +122,6 @@ def analyse_data(dict_army, dict_board, dict_memory, players):
 
     # check if orders are still valid
     wrong_orders = []
-    print(dict_memory)
     for unit, order in dict_memory['orders'].items():
         if (
             # delete orders if a tanker want to go on a dead cruiser
@@ -269,7 +273,6 @@ def analyse_attack(dict_army, dict_board, players):
                         unit = value[players[0]]
                         if target in unit:
                             x_target, y_target = case_into_pos(key)
-                print(x_shooter, y_shooter, x_target, y_target)
                 # check if the range is correct
                 if compute_manhattan_distance(x_shooter, y_shooter, x_target,
                                               y_target, shooting_range):
@@ -302,10 +305,8 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
 
     """
     move_units = ''
-    # if tanker energy_capacity <= 50% and there are still peaks on the map
-    # move tankers to the nearest peak
 
-    print(dict_memory)
+    # Determine tanker(s) move(s)
     for unit in dict_army[players[1]]:
         if unit != 'hub' and dict_army[
                 players[1]][unit]['ship_type'] == 'tanker':
@@ -338,7 +339,6 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                                         if players[1] in dict_board[case_cruiser] and second_unit in dict_board[case_cruiser][players[1]]:
                                             move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
                                             dict_memory['orders'].update({unit: second_unit})
-                                            print('working')
 
                                 # if hub energy < 1/2 -> hub
                                 if second_unit == 'hub' and dict_army[players[1]]['hub']['current_energy'] / dict_army[players[1]]['hub']['energy_capacity'] < 50 / 100:
@@ -396,6 +396,8 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
                     cruiser = find_nearest_entity(dict_enemy_cruisers, case)
                     case_cruiser = dict_enemy_cruisers[cruiser]['case']
                     move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
+                else:
+                    move_units += " %s:%s " % (unit, go_to(case, dict_memory['data']['enemy_hub']))
 
     return move_units
 
@@ -423,7 +425,6 @@ def analyse_transfer(dict_army, dict_board, dict_peaks, dict_memory, players):
     transfer_orders = ''
     from equest_namur_gr_50 import compute_manhattan_distance
 
-    print(dict_memory)
     for unit in dict_army[players[1]]:
         if unit != 'hub' and dict_army[
                 players[1]][unit]['ship_type'] == 'tanker':
@@ -516,16 +517,16 @@ def go_to(case_0, case_1):
 
 
 def find_nearest_entity(dict_entities, case):
-    """compute the distance between a cruiser and its target
+    """compute the distance between a unit and its target
 
     Parameters
     ----------
-    dict_entity: dictionnary with all the entities locations(dict)
+    dict_entities: dictionnary with all the entities locations(dict)
     case: case of the unit(str)
 
     return
     ------
-    distance: distance between the cruiser and the target(int)
+    distance: distance between the unit and the target(int)
 
     Version
     -------
@@ -533,7 +534,6 @@ def find_nearest_entity(dict_entities, case):
     implementation: François Bechet (v.1 28/04/20)
     """
     case_x, case_y = case_into_pos(case)
-
     dict_distance = {}
     for entity in dict_entities:
 
@@ -541,7 +541,7 @@ def find_nearest_entity(dict_entities, case):
 
         x = abs(int(case_x) - int(case_0))
         y = abs(int(case_y) - int(case_1))
-        dict_distance[entity] = (abs(x - y))
+        dict_distance[entity] = max(x , y)
 
     return (min(dict_distance, key=dict_distance.get))
 

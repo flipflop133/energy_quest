@@ -3,7 +3,7 @@ import copy
 
 import colored
 
-import ai
+import AI_gr_50
 import remote_play
 
 
@@ -93,16 +93,14 @@ def game(board_path,
 
     # start the main game loop
 
-    # while play_game:
-    #     try:
-    #         peace = play_turn(dict_board, dict_army, dict_recruit, width, height, players, peace, connection, colored_display)
-    #     except Exception:
-    #         print("One of the players entered a bad order")
     while play_game:
-        peace, play_game = play_turn(dict_board, dict_army, dict_recruit,
-                                     dict_memory, width, height, players,
-                                     peace, connection, colored_display,
-                                     play_game)
+        try:
+            peace, play_game = play_turn(dict_board, dict_army, dict_recruit,
+                                         dict_memory, width, height, players,
+                                         peace, connection, colored_display,
+                                         play_game)
+        except Exception:
+            print("One of the players entered a bad order")
 
 
 def create_board(board_file, players):
@@ -381,7 +379,7 @@ def display_board(dict_board, height, width, players, dict_army,
             print('energy :', dict_board[case]['peak']['energy'], end='  ▍ ')
             if i % 5 == 0:  # go to the next line every 5 peaks
                 print('\n')
-
+    print('\n')
     # display the players units and hubs
     for player in players:
         for x in range(width):
@@ -446,6 +444,7 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
         if 'ai' not in players[1]:
             remote_play.close_connection(connection)
         play_game = False
+        return 0, play_game
     elif win_condition[2] == 400:
         print("There was no attack during 400 turns so the game ended.")
         if 'ai' not in players[1]:
@@ -458,6 +457,7 @@ def play_turn(dict_board, dict_army, dict_recruit, dict_memory, width, height,
         regenerate(dict_army, players)
         display_board(dict_board, height, width, players, dict_army,
                       colored_display)
+
     return win_condition[2], play_game
 
 
@@ -520,9 +520,9 @@ def get_order(players, dict_army, dict_board, dict_memory, connection,
                     remote_play.notify_remote_orders(connection, order_player1)
                     list_order_player = (order_player1).split()
                 else:
-                    order_player1 = ai.ai_play(dict_army, dict_board,
-                                               dict_memory, dict_recruit,
-                                               players, player)
+                    order_player1 = AI_gr_50.ai_play(dict_army, dict_board,
+                                                     dict_memory, dict_recruit,
+                                                     players, player)
                     remote_play.notify_remote_orders(connection, order_player1)
                     list_order_player = (order_player1).split()
             # get player2 orders
@@ -536,9 +536,9 @@ def get_order(players, dict_army, dict_board, dict_memory, connection,
                 list_order_player = (input("%s, please enter your orders : " %
                                            players[0]).split())
             else:
-                list_order_player = ai.ai_play(dict_army, dict_board,
-                                               dict_memory, dict_recruit,
-                                               players, player).split()
+                list_order_player = AI_gr_50.ai_play(dict_army, dict_board,
+                                                     dict_memory, dict_recruit,
+                                                     players, player).split()
         # place player's orders in dict_order
         for i in range(len(list_order_player)):
             if '@' in list_order_player[i]:
