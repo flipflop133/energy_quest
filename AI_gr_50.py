@@ -388,15 +388,16 @@ def analyse_move(dict_army, dict_board, dict_peaks, dict_enemy_cruisers, dict_me
 
     # move cruisers to the nearest enemy cruiser
     for unit in dict_army[players[1]]:
-        if unit != 'hub' and dict_army[
-                players[1]][unit]['ship_type'] == 'cruiser':
+        if unit != 'hub' and dict_army[players[1]][unit]['ship_type'] == 'cruiser':
             for case in dict_board:
-                if (players[1] in dict_board[case] and unit in dict_board[case][
-                        players[1]]) and (dict_enemy_cruisers != {}):
+                if (
+                    (players[1] in dict_board[case] and unit in dict_board[case][players[1]]) and
+                    (dict_enemy_cruisers != {})
+                ):
                     cruiser = find_nearest_entity(dict_enemy_cruisers, case)
                     case_cruiser = dict_enemy_cruisers[cruiser]['case']
                     move_units += " %s:%s " % (unit, go_to(case, case_cruiser))
-                else:
+                elif (players[1] in dict_board[case] and unit in dict_board[case][players[1]]):
                     move_units += " %s:%s " % (unit, go_to(case, dict_memory['data']['enemy_hub']))
 
     return move_units
@@ -541,7 +542,7 @@ def find_nearest_entity(dict_entities, case):
 
         x = abs(int(case_x) - int(case_0))
         y = abs(int(case_y) - int(case_1))
-        dict_distance[entity] = max(x , y)
+        dict_distance[entity] = max(x, y)
 
     return (min(dict_distance, key=dict_distance.get))
 
